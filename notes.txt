@@ -1,4 +1,26 @@
-// SWTLoader.java (copied, notes)
+// general purpose notes
+
+[Architecture]
+universe - internet
+galaxy - network
+star - pc/vm host
+planet - attached sbc
+moon? - sensor/servo/etc
+
+[Atoms]
+
+support downstream atoms, with a planet-destination
+support upstream atoms?
+
+[Messages]
+
+available commands (?)
+  A<0-?>=0.75 (?) // applies output, terminates current wait cycle
+  <request startup/identification> // request startup info, terminates wait cycle
+  <request regular/status> // terminates current wait cycle
+
+
+// demo.txl.SWTLoader.java (copied, notes)
 
 public static main() {
 
