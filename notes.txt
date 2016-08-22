@@ -1,1 +1,19 @@
 // SWTLoader.java (copied, notes)
+
+public static main() {
+
+  // select jar filename
+  final String strJarFile = "org.eclipse.swt_64.jar";
+  
+  // extract embedded jar to filesystem
+  final File file = ...
+  
+  URL url = file.toURL();
+  
+  URLClassLoader loader = ClassLoader.getSystemClassLoader();
+  
+  Method method = URLClassLoader.class.getDeclaredMethod("addURL", new Class[]{URL.class} );
+  method.setAccessible( true );
+  method.invoke( loader, new Object[] { url } );
+
+}
