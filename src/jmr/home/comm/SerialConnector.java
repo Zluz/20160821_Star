@@ -14,7 +14,6 @@ import java.util.List;
 
 import gnu.io.CommPort;
 import gnu.io.CommPortIdentifier;
-import gnu.io.RXTXCommDriver;
 import gnu.io.RXTXVersion;
 import gnu.io.SerialPort;
 import gnu.io.UnsupportedCommOperationException;
@@ -28,10 +27,6 @@ import jmr.home.model.IAtomMetadata;
 
 public class SerialConnector implements IAtomMetadata {
 
-//	public enum ComPort { 
-//				COM1, COM2, COM3, COM4,
-//				COM5, COM6, COM7, COM8,
-//				COM9, COM10, COM11, COM12 };
 
 	public enum ComBaud {	_9600,	// default, fall-back
 							_115200, // fast 
@@ -64,15 +59,11 @@ public class SerialConnector implements IAtomMetadata {
 	};
 
 
-	public final static int SERIAL_BAUD_RATE = 115200;
-//	public final static int SERIAL_BAUD_RATE =   9600;
-	
 	public final static int SERIAL_DATA_BITS = SerialPort.DATABITS_8;
 	public final static int SERIAL_STOP_BITS = SerialPort.STOPBITS_1;
 	public final static int SERIAL_PARITY = SerialPort.PARITY_NONE;
 	
 	
-//	public final ComPort port;
 	public final CommPortIdentifier port;
 	
 	public ComBaud baud;
@@ -84,9 +75,6 @@ public class SerialConnector implements IAtomMetadata {
 	public OutputStream streamOutput;
 //	public InputStream streamInput;
 	
-//	private int iGoodBytes = 0;
-//	private int iBadBytes = 0;
-
 	private SerialPort serialPort;
 	
 	private boolean bOpen;
@@ -108,25 +96,10 @@ public class SerialConnector implements IAtomMetadata {
 		strbuf = new StringBuffer();
 	}
 
-	
-
-//	public int getBadBytes() {
-//		return iBadBytes;
-//	}
-//	
-//	public int getGoodBytes() {
-//		return iGoodBytes;
-//	}
 
 	
 	public boolean attachToPort() throws Exception {
 
-//		final String strPort = port.name();
-//		final String strPort = port.getName();
-		
-//		final CommPortIdentifier portIdentifier = 
-//						CommPortIdentifier.getPortIdentifier( strPort );
-		
 		if ( port.isCurrentlyOwned() ) {
 //			System.err.println( "Error: Port is currently in use" );
 			return false;
@@ -145,47 +118,6 @@ public class SerialConnector implements IAtomMetadata {
 		}
 		return true;
 	}
-	
-	
-//	public boolean connect() throws Exception {
-//		
-//		final String strPort = port.name();
-//		
-//		final CommPortIdentifier portIdentifier = 
-//						CommPortIdentifier.getPortIdentifier( strPort );
-//		
-//		if ( portIdentifier.isCurrentlyOwned() ) {
-//			System.err.println( "Error: Port is currently in use" );
-//			return false;
-//		} else {
-//			final CommPort commPort = 
-//					portIdentifier.open( this.getClass().getName(), 2000 );
-//
-//			if (commPort instanceof SerialPort) {
-//				serialPort = (SerialPort) commPort;
-//				
-//				this.bOpen = true;
-//
-//				serialPort.setSerialPortParams(	baud.getRate(),
-//												SERIAL_DATA_BITS, 
-//												SERIAL_STOP_BITS,
-//												SERIAL_PARITY );
-//
-//				streamInput = serialPort.getInputStream();
-//				streamOutput = serialPort.getOutputStream();
-//
-//				threadReader = new Thread( new SerialReader(streamInput) );
-//				threadReader.start();
-//				threadWriter = new Thread( new SerialWriter(streamOutput) );
-//				threadWriter.start();
-//				
-//			} else {
-//				System.out.println("Error: Only serial ports are handled by this example.");
-//			}
-//		}
-//		return true;
-//	}
-
 	
 	public AtomGenerator getAtomGenerator() {
 		return this.ag;
@@ -228,8 +160,6 @@ public class SerialConnector implements IAtomMetadata {
 	
 	
 	public void close() {
-//		this.serialPort.close();
-//		this.serialPort.
 		this.serialPort = null;
 		
 		this.ag.close();
@@ -277,51 +207,6 @@ public class SerialConnector implements IAtomMetadata {
 		return true;
 	}
 	
-//	/** 
-//	 * Receive data from the port, print to standard out.
-//	 */
-//	private class SerialReader implements Runnable {
-//		final InputStream in;
-//
-//		public SerialReader( final InputStream in ) {
-//			this.in = in;
-//		}
-//
-//		public void run() {
-//			byte[] buffer = new byte[1024];
-//			int len = -1;
-//			try {
-//				while ((len = this.in.read(buffer)) > -1) {
-//					final String text = new String( buffer, 0, len );
-//					
-////					for ( final byte b : text.getBytes() ) {
-////						final char c = (char)b;
-////						countByte( c );
-////					}
-//					if ( !text.isEmpty() ) {
-//						if ( isPureAscii( text ) ) {
-//							iGoodBytes = iGoodBytes + text.length();
-//						} else {
-//							iBadBytes = iBadBytes + 1;
-////							System.err.print( "ERROR++" );
-//						}
-//					}
-//					
-//					synchronized( strbuf ) {
-//						strbuf.append( text );
-//					}
-//					if ( bOpen ) {
-////						System.out.print( text );
-//					} else {
-//						return;
-//					}
-//				}
-//			} catch (IOException e) {
-//				e.printStackTrace();
-//			}
-//		}
-//	}
-
 	
 	public boolean send( final String text ) {
 		try {
@@ -478,6 +363,5 @@ public class SerialConnector implements IAtomMetadata {
 			e.printStackTrace();
 		}
 	}
-
 
 }

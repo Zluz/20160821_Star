@@ -21,9 +21,6 @@ public class PortTree {
 
 	private final Display display;
 
-//	public final EnumMap<SerialConnector.ComPort,ConnectorData> 
-//			mapConnectors = new EnumMap<>( SerialConnector.ComPort.class );
-
 	public final Map<CommPortIdentifier,ConnectorData> 
 			mapConnectors = new HashMap<>();
 	
@@ -37,9 +34,6 @@ public class PortTree {
 			this.item = item;
 		}
 
-//		public ConnectorData( final Planet planet ) {
-//			this.planet = planet;
-//		}
 		
 		public void setPlanet( final Planet planet ) {
 			this.planet = planet;
@@ -73,7 +67,6 @@ public class PortTree {
 	}
 
 	public void closeConnectors() {
-//		for ( final ComPort port : mapConnectors.keySet() ) {
 		for ( final CommPortIdentifier port : mapConnectors.keySet() ) {
 			final ConnectorData cd = mapConnectors.get( port );
 			try {
@@ -92,7 +85,6 @@ public class PortTree {
 							final String strStatus ) {
 		if ( null==port ) return;
 
-//		final ConnectorData[] cd = new ConnectorData[]{ null };
 		display.asyncExec( new Runnable() {
 
 			@Override
@@ -128,28 +120,10 @@ public class PortTree {
 					}
 				}
 				
-//				if ( null!=item ) {
-//					cd[0] = new PortTree.ConnectorData( item );
-////					cd[0].item = item;
-//				}
-//				if ( null!=cd ) {
-//					mapConnectors.put( port, cd );
-//				}
 			}
 			
 		});
-//		mapConnectors.put( port, cd[0] );
-//		return cd[0];
 	}
-	
-//	public void setLineStatus(	final SerialConnector.ComPort port,
-//								final String strStatus ) {
-//		if ( null==port ) return;
-//		
-//		final ConnectorData cd = mapConnectors.get( port );
-//		if ( null==cd ) return;
-//		
-//	}
 	
 	
 	

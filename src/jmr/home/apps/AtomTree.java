@@ -24,13 +24,11 @@ public class AtomTree {
 	private final Display display;
 
 	public final Map<String,AtomData> mapAtoms = new HashMap<>();
-//	public final List<Atom> listAtoms = new LinkedList<Atom>();
 	
 	
 	
 	public static class AtomData {
 		
-//		Map<String,String> map = new HashMap<>();
 		final Atom atom;
 		
 		final TreeItem item;
@@ -45,13 +43,6 @@ public class AtomTree {
 			this.strStatus = strStatus;
 		}
 		
-//		public void setAtom( final Atom atom ) {
-//			this.atom = atom;
-//		}
-		
-//		public void setData( final Map<String,String> ) {
-//			this.planet = planet;
-//		}
 	}
 	
 	
@@ -87,7 +78,6 @@ public class AtomTree {
 
 		final String strAtomID = atom.getName();
 		
-//		final ConnectorData[] cd = new ConnectorData[]{ null };
 		display.asyncExec( new Runnable() {
 
 			@Override
@@ -110,7 +100,6 @@ public class AtomTree {
 						item = new TreeItem( tree, SWT.NONE );
 						
 						final String[] row = new String[] { 
-//								strAtomID + " " + strStatus,
 								strAtomID,
 								"", "" };
 						item.setText( row );
@@ -133,18 +122,13 @@ public class AtomTree {
 			}
 			
 		});
-//		mapConnectors.put( port, cd[0] );
-//		return cd[0];
 	}
 	protected void updateItem(	final TreeItem item, 
 								final Atom atom ) {
 		if ( null==item ) return;
 		if ( null==atom ) return;
 		
-//		for ( final Entry<String, String> entry : atom.entrySet() ) {
 		for ( final String strName : atom.getOrderedKeys() ) {
-//			final String strName = entry.getKey();
-//			final String strValue = entry.getValue();
 			String strValue = atom.get( strName );
 			strValue.replaceAll( "\\n", Text.DELIMITER );
 

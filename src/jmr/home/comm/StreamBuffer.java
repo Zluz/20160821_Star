@@ -4,11 +4,8 @@ public class StreamBuffer {
 
 	private final StringBuffer strbuf = new StringBuffer();
 	
-//	String strbuf = "";
-	
 	public synchronized void append( final String text ) {
 		strbuf.append( text );
-//		strbuf = strbuf + text;
 		
 //		System.out.println( Integer.toHexString(hashCode()) + "+++ " + formatted( strbuf.toString() ) );
 	}
@@ -27,7 +24,6 @@ public class StreamBuffer {
 			final String strPopped = strText.substring( 0, iPosEnd+1 );
 			final String strRemaining = strText.substring( iPosEnd+1 );
 
-//			strbuf = strRemaining;
 			strbuf.setLength( 0 );
 			strbuf.append( strRemaining );
 			
@@ -36,15 +32,12 @@ public class StreamBuffer {
 			return strPopped;
 		}
 	}
-
-	
 	
 
 	@SuppressWarnings("unused")
 	private String formatted( final String strSource ) {
 		if ( null==strSource ) return "";
 		
-//		String strTarget = strSource;
 		char[] chars = strSource.toCharArray();
 		try {
 			for ( int i=0; i<strSource.length(); i++ ) {
@@ -54,18 +47,11 @@ public class StreamBuffer {
 //					System.arraycopy( chars, i+1, chars, i, chars.length-i-1 );
 					chars[i] = ' ';
 				}
-//				if ( !Atom.isValidChar( chars[i] ) ) {
-//					chars[i] = '_';
-//				}
 			}
-//			strTarget = strTarget.replaceAll( "\\n", "\\" );
-//			strTarget = strTarget.replaceAll( "\\r", "\\" );
 		} catch ( final Exception e ) {
 			// ignore
 		}
 		return "[" + new String( chars ) + "]";
 	}
-
-	
 	
 }

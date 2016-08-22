@@ -26,7 +26,6 @@ public class AtomGenerator {
 	
 	private int iCount = 0;
 	
-//	public final StringBuffer strbuf = new StringBuffer();
 	private final StreamBuffer sb = new StreamBuffer();
 
 	public AtomGenerator(	final InputStream input,
@@ -125,67 +124,9 @@ public class AtomGenerator {
 	}
 	
 	
-//	private String popBuffer() {
-//		final String strText = strbuf.toString();
-//		
-//		System.out.println( ">>> " + formatted( strText ) );
-//
-//		int iPosEnd = strText.indexOf( "}" );
-//		
-//		if ( iPosEnd<0 ) {
-//			return null;
-//		} else {
-//			final String strPopped = strText.substring( 0, iPosEnd+1 );
-//			final String strRemaining = strText.substring( iPosEnd+1 );
-//
-//			strbuf.setLength( 0 );
-//			strbuf.append( strRemaining );
-//			System.out.println( "  < " + formatted( strPopped ) );
-//			return strPopped;
-//		}
-//	}
-	
-
-//	private String popBuffer_() {
-//		String strText = strbuf.toString();
-//		
-//		System.out.println( ">>> " + formatted( strText ) );
-//		
-//		int iPosStart = strText.indexOf( "{" );
-//		if ( iPosStart<0 ) {
-//			return null; // nothing started yet..
-//		}
-//		
-//		int iPosEnd = strText.indexOf( "}", iPosStart );
-//		
-////		if ( iPosEnd < iPosStart ) {
-////			// discard incomplete
-////			strText = strText.substring( iPosStart );
-////			strbuf.setLength( 0 );
-////			strbuf.append( strText );
-////			
-////			iPosEnd = strText.indexOf( "}" );
-////		}
-//
-//		if ( iPosEnd<0 ) {
-//			return null; // nothing ended yet..
-//		}
-//
-//		iPosEnd++;
-//		final String strPopped = strText.substring( iPosStart, iPosEnd );
-//		final String strRemaining = strText.substring( iPosEnd );
-//		
-//		strbuf.setLength( 0 );
-//		strbuf.append( strRemaining );
-//		
-//		System.out.println( "  < " + formatted( strPopped ) );
-//		return strPopped;
-//	}
-	
 	private void checkBuffer() {
 		String strPopped;
 		do {
-//			strPopped = popBuffer();
 			strPopped = sb.pop( '{' );
 			if ( null!=strPopped && strPopped.contains( "{" ) ) {
 				process( strPopped );
@@ -193,49 +134,6 @@ public class AtomGenerator {
 		} while ( null!=strPopped );
 	}
 	
-//	private void _checkBuffer() {
-//		String strText = strbuf.toString();
-//		
-//		int iPosStart = strText.indexOf( "{" );
-//		if ( iPosStart<0 ) {
-//			return; // nothing started yet..
-//		}
-//		
-//		int iPosEnd = strText.indexOf( "}" );
-//		
-//		if ( iPosEnd < iPosStart ) {
-//			// discard incomplete
-//			strText = strText.substring( iPosStart );
-//			strbuf.setLength( 0 );
-//			strbuf.append( strText );
-//			
-//			iPosEnd = strText.indexOf( "}" );
-//		}
-//		
-//		if ( iPosEnd<0 ) {
-//			return; // nothing ended yet..
-//		}
-//		
-//		do {
-//			final String strSegment = strText.substring( iPosStart, iPosEnd+1 );
-//			
-//			process( strSegment );
-//			
-//			iPosStart = strText.indexOf( "{", iPosEnd );
-//			iPosEnd = strText.indexOf( "}", iPosStart );
-//			
-////			strText = strText.substring( iPosEnd+1 );
-//
-//		} while ( iPosStart>=0 && iPosEnd>=0 );
-//		
-//		strbuf.setLength( 0 );
-//		if ( iPosStart<0 ) {
-//			strbuf.append( strText );
-//		} else {
-//			strbuf.append( strText.substring( iPosStart ) );
-//		}
-//	}
-
 
 	private void process( final String string ) {
 		if ( null==string ) return;
