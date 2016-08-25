@@ -166,8 +166,16 @@ public class Star {
 					if ( bNewLine ) {
 						strbuf.append( Text.DELIMITER );
 					}
-					txt.setText( strbuf.toString() );
-					txt.setSelection( strbuf.length() );
+					// now crop
+					String strNewText = strbuf.toString();
+					int iPos = strNewText.length() - 10000;
+					if ( iPos>0 ) {
+						iPos = strNewText.indexOf( Text.DELIMITER, iPos );
+						strNewText = strNewText.substring( iPos );
+					}
+					// apply the text
+					txt.setText( strNewText );
+					txt.setSelection( strNewText.length() );
 				}				
 			});
 		}
