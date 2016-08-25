@@ -13,7 +13,7 @@ public class SystemAtoms {
 	final static public String NAME_ENVVARS = "Environment";
 
 	public static Atom generateJavaProperties() {
-		final Atom atom = new Atom( Atom.Type.SYSTEM, NAME_PROPERTIES );
+		final Atom atom = new Atom( Atom.Type.SYSTEM, NAME_PROPERTIES, null );
 		final Properties properties = System.getProperties();
 
 		final List<String> listKeys = new LinkedList<String>();
@@ -35,7 +35,7 @@ public class SystemAtoms {
 	}
 
 	public static Atom generateEnvironmentVariables() {
-		final Atom atom = new Atom( Atom.Type.SYSTEM, NAME_ENVVARS );
+		final Atom atom = new Atom( Atom.Type.SYSTEM, NAME_ENVVARS, null );
 		final Map<String, String> map = System.getenv();
 		
 //		for ( final Entry<String, String> entry : properties.entrySet() ) {

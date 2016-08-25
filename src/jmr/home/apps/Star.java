@@ -24,7 +24,7 @@ import gnu.io.CommPortIdentifier;
 import jmr.home.comm.AtomGenerator;
 import jmr.home.comm.SerialConnector;
 import jmr.home.comm.SerialConnector.ComBaud;
-//import jmr.home.comm.SerialConnector.ComPort;
+import jmr.home.engine.Processor;
 import jmr.home.model.SystemAtoms;
 
 public class Star {
@@ -134,6 +134,8 @@ public class Star {
 		porttree = new PortTree( compLeft );
 		
 		atomtree = new AtomTree( compRight );
+		
+		new Processor( porttree, atomtree );
 		
 		txtLog = new StyledText( compCenter, SWT.BORDER | SWT.H_SCROLL | SWT.V_SCROLL | SWT.MULTI | SWT.READ_ONLY );
 	    
@@ -280,6 +282,9 @@ public class Star {
 									log( "ESTABLISHED." );
 									
 									ag.accept( this.atomtree );
+									
+									ag.registerConsumer( porttree );
+									ag.registerConsumer( Processor.getProcessor() );
 									
 									bNewPortAdded = true;
 									porttree.setStatus( 

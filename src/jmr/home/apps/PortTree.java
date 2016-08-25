@@ -11,8 +11,10 @@ import org.eclipse.swt.widgets.TreeColumn;
 import org.eclipse.swt.widgets.TreeItem;
 
 import gnu.io.CommPortIdentifier;
+import jmr.home.model.Atom;
+import jmr.home.model.IAtomConsumer;
 
-public class PortTree {
+public class PortTree implements IAtomConsumer {
 
 	private final Tree tree;
 	private final TreeColumn tcName;
@@ -26,7 +28,7 @@ public class PortTree {
 	
 	public static class ConnectorData {
 		
-		Planet planet;
+		public Planet planet;
 		
 		final TreeItem item;
 		
@@ -123,6 +125,56 @@ public class PortTree {
 			}
 			
 		});
+	}
+
+	private ConnectorData getDataForPort( final String strPort ) {
+		try {
+//			final CommPortIdentifier port = 
+//							CommPortIdentifier.getPortIdentifier( strPort );
+			CommPortIdentifier port = null; 
+			
+			for ( final CommPortIdentifier cpi : mapConnectors.keySet() ) {
+				if ( cpi.getName().equals( strPort ) ) {
+					port = cpi;
+				}
+			}
+			if ( null!=port ) {
+				final ConnectorData data = this.mapConnectors.get( port );
+				return data;
+			}
+//		} catch ( final NoSuchPortException e ) {
+		} catch ( final Exception e ) {
+			return null;
+		}
+		return null;
+	}
+	
+	public void setSerialNumber(	final String strPort, 
+									final String strSerialNumber ) {
+		final ConnectorData data = getDataForPort( strPort );
+		if ( null==data ) return;
+		
+//		data.planet.setName( strSerialNumber );
+		display.asyncExec( new Runnable() {
+			@Override
+			public void run() {
+				data.item.setText( 1, strSerialNumber );
+				data.item.setText( 2, "Live" );
+			}
+		});
+	}
+
+	@Override
+	public void consume( final Atom atom ) {
+
+		final String strPort = atom.get( Atom.VAR_ORIG_PORT );
+		if ( null!=strPort ) {
+			final String strSerialNumber = atom.get( Atom.VAR_SERIAL_NUMBER );
+			if ( null!=strSerialNumber ) {
+				this.setSerialNumber( strPort, strSerialNumber );
+			}
+		}
+	
 	}
 	
 	

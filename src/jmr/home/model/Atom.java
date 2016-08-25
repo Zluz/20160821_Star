@@ -5,6 +5,8 @@ import java.util.HashMap;
 import java.util.LinkedList;
 import java.util.List;
 
+import jmr.home.util.Util;
+
 public class Atom extends HashMap<String,String> {
 
 	public static enum Type { SYSTEM, STATUS, EVENT };
@@ -12,10 +14,16 @@ public class Atom extends HashMap<String,String> {
 	public final static String VAL_FIELD_DELIM = "\n";
 	
 	public final static String VAR_TIME = "Atom.Time";
+	public final static String VAR_ORIG_HOST = "Atom.Orig.Host";
+	public final static String VAR_ORIG_PORT = "Atom.Orig.Port";
+//	public final static String VAR_SERIAL_NUMBER = "Device.SerialNumber";
+	public final static String VAR_SERIAL_NUMBER = "Arduino.Serial";
 	
 	private static final long serialVersionUID = 1L;
 	
 	public String strName;
+	
+//	private final String strPort;
 	
 	private final long lTime = System.currentTimeMillis();
 	
@@ -24,14 +32,19 @@ public class Atom extends HashMap<String,String> {
 	/** Ordered list of keys */
 	private final List<String> listKeys = new LinkedList<String>();
 	
-	public Atom( final Type type ) {
+	private Atom(	final Type type,
+					final String strPort ) {
 		this.type = type;
+//		this.strPort = strPort;
 		this.put( VAR_TIME, Long.toString( lTime ) );
+		this.put( VAR_ORIG_HOST, Util.getHostname() );
+		this.put( VAR_ORIG_PORT, strPort );
 	};
 	
 	public Atom(	final Type type,
-					final String strName ) {
-		this( type );
+					final String strName,
+					final String strPort ) {
+		this( type, strPort );
 		this.strName = strName;
 	}
 	

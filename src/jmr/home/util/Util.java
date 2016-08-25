@@ -3,10 +3,15 @@ package jmr.home.util;
 import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
+import java.net.InetAddress;
+import java.net.UnknownHostException;
 import java.nio.file.Files;
 
 public class Util {
 
+	
+	public static final String UNKNOWN = "(unknown)";
+	
 	
 	public static File extract( final String strInnerFile ) {
 		try {
@@ -26,6 +31,18 @@ public class Util {
 			e.printStackTrace();
 		}
 		return null;
+	}
+	
+	public static String getHostname() {
+		try {
+			final InetAddress host = InetAddress.getLocalHost();
+			final String strHostname = host.getHostName();
+			return strHostname;
+		} catch ( final UnknownHostException e ) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
+		return UNKNOWN;
 	}
 	
 }

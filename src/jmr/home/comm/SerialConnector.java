@@ -275,7 +275,7 @@ public class SerialConnector implements IAtomMetadata {
 
 	public static Atom getVersionInfo() {
 		final String strClassName = SerialConnector.class.getSimpleName();
-		final Atom atom = new Atom( Atom.Type.SYSTEM, strClassName );
+		final Atom atom = new Atom( Atom.Type.SYSTEM, strClassName, null );
 		atom.put( "RXTX.Version", RXTXVersion.getVersion() );
 		
 		final Enumeration<?> enumeration = CommPortIdentifier.getPortIdentifiers();

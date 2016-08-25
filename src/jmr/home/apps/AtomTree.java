@@ -130,6 +130,7 @@ public class AtomTree {
 		
 		for ( final String strName : atom.getOrderedKeys() ) {
 			String strValue = atom.get( strName );
+			if ( null==strValue ) strValue = "";
 			strValue.replaceAll( "\\n", Text.DELIMITER );
 
 			TreeItem tiItem = null;

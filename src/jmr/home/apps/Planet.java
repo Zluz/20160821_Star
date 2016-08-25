@@ -24,5 +24,9 @@ public class Planet {
 	public String getStatus() {
 		return "<unknown>";
 	}
+
+	public void setName( final String strName ) {
+		this.strName = strName;
+	}
 	
 }
