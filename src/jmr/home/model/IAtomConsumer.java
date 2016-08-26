@@ -1,6 +1,6 @@
 package jmr.home.model;
 
-public interface IAtomConsumer {
+public interface IAtomConsumer extends IAtomValues {
 
 	public void consume( final Atom atom );
 	

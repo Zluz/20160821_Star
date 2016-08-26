@@ -25,6 +25,7 @@ import jmr.home.comm.AtomGenerator;
 import jmr.home.comm.SerialConnector;
 import jmr.home.comm.SerialConnector.ComBaud;
 import jmr.home.engine.Processor;
+import jmr.home.engine.Relay;
 import jmr.home.model.SystemAtoms;
 
 public class Star {
@@ -132,11 +133,13 @@ public class Star {
 		compRight.setLayout( new FillLayout() );
 		
 		porttree = new PortTree( compLeft );
-		
+		Relay.get().registerConsumer( porttree );
 		atomtree = new AtomTree( compRight );
+//		Relay.get().registerConsumer( atomtree );
 		
 		new Processor( porttree, atomtree );
-		
+		Relay.get().registerConsumer( Processor.getProcessor() );
+
 		txtLog = new StyledText( compCenter, SWT.BORDER | SWT.H_SCROLL | SWT.V_SCROLL | SWT.MULTI | SWT.READ_ONLY );
 	    
 	    shell.pack();
@@ -188,21 +191,15 @@ public class Star {
 	}
 	
 	private void scanPlanets() {
-		log( "Scanning for planets." );
+//		log( "Scanning for planets." );
 		
-		
-		
-//		final List<CommPortIdentifier> arrPorts = Arrays.asList( SerialConnector.ComPort.values() );
 		final List<CommPortIdentifier> arrPorts = SerialConnector.getAvailablePorts();
 		final List<CommPortIdentifier> listPorts = new LinkedList<>( arrPorts );
 
-//		final Set<CommPortIdentifier> 
-//				setPortsInUse = porttree.mapConnectors.keySet();
 		final Set<CommPortIdentifier> 
 				setPortsInUse = porttree.mapConnectors.keySet();
 		final List<String> listPortsInUse = new LinkedList<>();
 		for ( final CommPortIdentifier portUsed : setPortsInUse ) {
-//			listPorts.remove( port );
 			listPortsInUse.add( portUsed.getName() );
 		}
 
@@ -228,7 +225,6 @@ public class Star {
 					for ( int i=0; (	i<rates.length 
 										&& !bNewPortAdded 
 										&& !bTimedout		); i++ ) {
-//					for ( final ComBaud rate : rates ) {
 						final ComBaud rate = rates[i];
 						
 						porttree.setStatus( port, "Checking: " + rate.toString() );
@@ -259,16 +255,13 @@ public class Star {
 								@SuppressWarnings("unused")
 								boolean bAcceptBad = false;
 								boolean bWaiting = true;
-//								boolean bTimeout = false;
 								do {
 									Thread.sleep( 1 );
-//									System.out.print(".");
 									if ( null!=ag ) {
 										if ( ag.getBadBytes() > 1 ) {
 											bAcceptBad = true;
 											bWaiting = false;
 										} else if ( ag.getGoodBytes() > 10 ) {
-//											System.out.println("[GOOD]");
 											bAcceptGood = true;
 											bWaiting = false;
 										}
@@ -283,9 +276,6 @@ public class Star {
 									
 									ag.accept( this.atomtree );
 									
-									ag.registerConsumer( porttree );
-									ag.registerConsumer( Processor.getProcessor() );
-									
 									bNewPortAdded = true;
 									porttree.setStatus( 
 											port, 
@@ -295,17 +285,13 @@ public class Star {
 									ag.close();
 									log( "Timed out." );
 								} else {
-									
 									ag.close();
-		
 									log( "Not accepted." );
 								}
 							} else {
 //								log( "Unavailable." );
 							}
 							
-//							log( "(Moving to the next port..)" );
-		
 						} catch ( final Exception e ) {
 							// probably means port is unavailable. skip.
 						}

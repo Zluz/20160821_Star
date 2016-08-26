@@ -101,7 +101,6 @@ public class SerialConnector implements IAtomMetadata {
 	public boolean attachToPort() throws Exception {
 
 		if ( port.isCurrentlyOwned() ) {
-//			System.err.println( "Error: Port is currently in use" );
 			return false;
 		} else {
 			final CommPort commPort = 

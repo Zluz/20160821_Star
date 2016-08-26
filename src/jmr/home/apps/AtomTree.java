@@ -13,8 +13,9 @@ import org.eclipse.swt.widgets.TreeColumn;
 import org.eclipse.swt.widgets.TreeItem;
 
 import jmr.home.model.Atom;
+import jmr.home.model.IAtomValues;
 
-public class AtomTree {
+public class AtomTree implements IAtomValues {
 
 	private final Tree tree;
 	private final TreeColumn tcName;
@@ -135,8 +136,8 @@ public class AtomTree {
 
 			TreeItem tiItem = null;
 
-			final boolean bMultiField = strValue.contains( Atom.VAL_FIELD_DELIM );
-			final String[] arrElements = strValue.split( Atom.VAL_FIELD_DELIM );
+			final boolean bMultiField = strValue.contains( VAL_FIELD_DELIM );
+			final String[] arrElements = strValue.split( VAL_FIELD_DELIM );
 			
 			final String strItemDisplay;
 			if ( bMultiField ) {

@@ -1,6 +1,6 @@
 package jmr.home.model;
 
-public interface IAtomMetadata {
+public interface IAtomMetadata extends IAtomValues {
 
 	public Atom getMetadata();
 	

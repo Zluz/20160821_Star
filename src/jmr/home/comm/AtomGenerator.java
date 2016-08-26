@@ -7,18 +7,12 @@ import java.nio.CharBuffer;
 import java.nio.charset.CharacterCodingException;
 import java.nio.charset.Charset;
 import java.nio.charset.CharsetDecoder;
-import java.util.HashSet;
-import java.util.Set;
 
 import jmr.home.apps.AtomTree;
+import jmr.home.engine.Relay;
 import jmr.home.model.Atom;
-import jmr.home.model.IAtomConsumer;
-import jmr.home.model.IAtomProducer;
 
-public class AtomGenerator implements IAtomProducer {
-
-	
-	final Set<IAtomConsumer> setConsumers = new HashSet<>();
+public class AtomGenerator {
 
 
 	private final InputStream input;
@@ -156,11 +150,8 @@ public class AtomGenerator implements IAtomProducer {
 		
 		iCount = iCount + 1;
 		this.tree.setAtom( atom, Integer.toString( iCount ) );
-		
 
-		for ( final IAtomConsumer consumer : setConsumers ) {
-			consumer.consume( atom );
-		}
+		Relay.get().consume( atom );
 	}
 
 
@@ -168,11 +159,4 @@ public class AtomGenerator implements IAtomProducer {
 		this.tree = atomtree;
 	}
 
-
-	@Override
-	public void registerConsumer( final IAtomConsumer consumer ) {
-		setConsumers.add( consumer );
-	}
-
-	
 }

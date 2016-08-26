@@ -35,7 +35,6 @@ public class PortTree implements IAtomConsumer {
 		public ConnectorData( final TreeItem item ) {
 			this.item = item;
 		}
-
 		
 		public void setPlanet( final Planet planet ) {
 			this.planet = planet;
@@ -167,9 +166,9 @@ public class PortTree implements IAtomConsumer {
 	@Override
 	public void consume( final Atom atom ) {
 
-		final String strPort = atom.get( Atom.VAR_ORIG_PORT );
+		final String strPort = atom.get( VAR_ORIG_PORT );
 		if ( null!=strPort ) {
-			final String strSerialNumber = atom.get( Atom.VAR_SERIAL_NUMBER );
+			final String strSerialNumber = atom.get( VAR_SERIAL_NUMBER );
 			if ( null!=strSerialNumber ) {
 				this.setSerialNumber( strPort, strSerialNumber );
 			}
