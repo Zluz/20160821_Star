@@ -18,6 +18,7 @@ import gnu.io.RXTXVersion;
 import gnu.io.SerialPort;
 import gnu.io.UnsupportedCommOperationException;
 import jmr.home.apps.AtomTree;
+import jmr.home.engine.Relay;
 import jmr.home.model.Atom;
 import jmr.home.model.IAtomMetadata;
 
@@ -91,14 +92,21 @@ public class SerialConnector implements IAtomMetadata {
 
 	public SerialConnector(	final CommPortIdentifier port,
 							final ComBaud baud ) {
+		assert( null!=port );
 		this.port = port;
 		this.baud = baud;
 		strbuf = new StringBuffer();
+		
+		Relay.get().consume( new Atom( Atom.Type.SYSTEM, 
+					"SerialConnector ctor", this.port.getName() ) );
 	}
 
 
 	
 	public boolean attachToPort() throws Exception {
+
+		Relay.get().consume( new Atom( Atom.Type.SYSTEM, 
+				"SerialConnector attachToPort()", this.port.getName() ) );
 
 		if ( port.isCurrentlyOwned() ) {
 			return false;
@@ -108,7 +116,7 @@ public class SerialConnector implements IAtomMetadata {
 
 			if (commPort instanceof SerialPort) {
 				serialPort = (SerialPort) commPort;
-				
+
 				this.bOpen = true;
 				
 			} else {
@@ -127,7 +135,10 @@ public class SerialConnector implements IAtomMetadata {
 		if ( null==serialPort ) return false;
 		if ( null==baud ) return false;
 		if ( baud.getRate()<=0 ) return false;
-		
+
+		Relay.get().consume( new Atom( Atom.Type.SYSTEM, 
+				"SerialConnector adjustBaudRate()", this.port.getName() ) );
+
 		this.ag = null;
 		
 		try {

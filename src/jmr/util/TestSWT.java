@@ -1,4 +1,4 @@
-package jmr.home.util;
+package jmr.util;
 /*
  * Create a Tree with columns
  * 

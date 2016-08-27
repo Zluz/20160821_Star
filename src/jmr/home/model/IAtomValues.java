@@ -10,4 +10,8 @@ public interface IAtomValues {
 //	public final static String VAR_SERIAL_NUMBER = "Device.SerialNumber";
 	public final static String VAR_SERIAL_NUMBER = "Arduino.Serial";
 	
+	public final static String VAR_INVOKE = "VAR_INVOKE";
+	
+	public final static String VAL_INVOKE_RESCAN_PORTS = "RESCAN_PORTS";
+	
 }

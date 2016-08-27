@@ -13,9 +13,10 @@ import org.eclipse.swt.widgets.TreeColumn;
 import org.eclipse.swt.widgets.TreeItem;
 
 import jmr.home.model.Atom;
+import jmr.home.model.IAtomConsumer;
 import jmr.home.model.IAtomValues;
 
-public class AtomTree implements IAtomValues {
+public class AtomTree implements IAtomValues, IAtomConsumer {
 
 	private final Tree tree;
 	private final TreeColumn tcName;
@@ -43,7 +44,6 @@ public class AtomTree implements IAtomValues {
 			this.atom = atom;
 			this.strStatus = strStatus;
 		}
-		
 	}
 	
 	
@@ -67,11 +67,13 @@ public class AtomTree implements IAtomValues {
 		tcStatus.setText( "Value" );
 		tcStatus.setWidth( 200 );
 	}
-	
-	public Tree getTree() {
-		return this.tree;
-	}
 
+
+	@Override
+	public void consume( final Atom atom ) {
+		setAtom( atom, "(consume)" );
+	}
+	
 	
 	public void setAtom(	final Atom atom,
 							final String strStatus ) {
@@ -199,16 +201,6 @@ public class AtomTree implements IAtomValues {
 			ti.setText( values );
 		}
 	}
-	
-//	public void setLineStatus(	final SerialConnector.ComPort port,
-//								final String strStatus ) {
-//		if ( null==port ) return;
-//		
-//		final ConnectorData cd = mapConnectors.get( port );
-//		if ( null==cd ) return;
-//		
-//	}
-	
 	
 	
 }

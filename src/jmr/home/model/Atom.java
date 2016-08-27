@@ -5,11 +5,12 @@ import java.util.HashMap;
 import java.util.LinkedList;
 import java.util.List;
 
-import jmr.home.util.Util;
+import jmr.util.Util;
+
 
 public class Atom extends HashMap<String,String> implements IAtomValues {
 
-	public static enum Type { SYSTEM, STATUS, EVENT };
+	public static enum Type { SYSTEM, STATUS, EVENT, INVOKE };
 
 	private static final long serialVersionUID = 1L;
 	
@@ -51,7 +52,7 @@ public class Atom extends HashMap<String,String> implements IAtomValues {
 	}
 	
 	public void setName( final String strName ) {
-		this.strName = strName;
+		this.strName = clean( strName );
 	}
 	
 	public String getName() {
@@ -74,7 +75,19 @@ public class Atom extends HashMap<String,String> implements IAtomValues {
 	public static boolean isValidChar( final char c ) {
 		if ( Character.isJavaIdentifierPart( c ) ) return true;
 		if ( "()[]<>_/\\\\.".indexOf(c)>-1 ) return true;
+		if ( " ".indexOf(c)>-1 ) return true;
 		return false;
+	}
+	
+	public static String clean( final String strInput ) {
+		final char[] chars = strInput.toCharArray();
+		for ( int i=0; i<chars.length; i++ ) {
+			if ( !isValidChar( chars[i] ) ) {
+				chars[i] = '_';
+			}
+		}
+		final String strOutput = new String( chars );
+		return strOutput;
 	}
 	
 	public void load( final String strLine ) {
@@ -99,6 +112,16 @@ public class Atom extends HashMap<String,String> implements IAtomValues {
 		} else {
 			this.put( strName, strValue );
 		}
-
 	}
+	
+	@Override
+	public String toString() {
+		final String strResult = 
+				"Atom@" + Integer.toHexString(hashCode())
+				+ "{" + this.type 
+				+ ", name:\"" + this.strName + "\""
+				+ ", " + listKeys.size() + " keys}";
+		return strResult;
+	}
+	
 }

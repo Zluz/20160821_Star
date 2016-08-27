@@ -21,6 +21,10 @@ public class Relay implements IAtomProducer, IAtomConsumer {
 	
 	@Override
 	public void consume( final Atom atom ) {
+		if ( null==atom ) return;
+		
+		System.out.println( "Relay.consume(), atom: " + atom );
+		
 		for ( final IAtomConsumer consumer : setConsumers ) {
 			consumer.consume( atom );
 		}

@@ -27,6 +27,7 @@ import jmr.home.comm.SerialConnector.ComBaud;
 import jmr.home.engine.Processor;
 import jmr.home.engine.Relay;
 import jmr.home.model.SystemAtoms;
+import jmr.integrate.usbdeview.USBDeview;
 
 public class Star {
 	
@@ -70,6 +71,11 @@ public class Star {
 		this.atomtree.setAtom( SystemAtoms.generateJavaProperties(), "(system)" );
 		this.atomtree.setAtom( SystemAtoms.generateEnvironmentVariables(), "(system)" );
 		this.atomtree.setAtom( SerialConnector.getVersionInfo(), "(system)" );
+		
+		Relay.get();
+		
+		USBDeview.initialize( 1 );
+		USBDeview.get().call();
 	}
 	
 	
@@ -135,7 +141,7 @@ public class Star {
 		porttree = new PortTree( compLeft );
 		Relay.get().registerConsumer( porttree );
 		atomtree = new AtomTree( compRight );
-//		Relay.get().registerConsumer( atomtree );
+		Relay.get().registerConsumer( atomtree );
 		
 		new Processor( porttree, atomtree );
 		Relay.get().registerConsumer( Processor.getProcessor() );
@@ -196,20 +202,14 @@ public class Star {
 		final List<CommPortIdentifier> arrPorts = SerialConnector.getAvailablePorts();
 		final List<CommPortIdentifier> listPorts = new LinkedList<>( arrPorts );
 
-		final Set<CommPortIdentifier> 
-				setPortsInUse = porttree.mapConnectors.keySet();
-		final List<String> listPortsInUse = new LinkedList<>();
-		for ( final CommPortIdentifier portUsed : setPortsInUse ) {
-			listPortsInUse.add( portUsed.getName() );
-		}
-
+		final Set<String> setPortsInUse = porttree.mapConnectors.keySet();
 
 		for ( final CommPortIdentifier port : listPorts ) {
 //			log( "Checking port: " + port.getName() );
 			
 			final SerialConnector connector = new SerialConnector( port );
 			try {
-				if ( !listPortsInUse.contains( port.getName() ) 
+				if ( !setPortsInUse.contains( port.getName() ) 
 						&& connector.attachToPort() ) {
 					
 					log( "Checking port: " + port.getName() );

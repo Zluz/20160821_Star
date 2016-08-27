@@ -19,15 +19,10 @@ public class SystemAtoms {
 		final List<String> listKeys = new LinkedList<String>();
 		for ( final Entry<Object, Object> entry : properties.entrySet() ) {
 			final String strName = entry.getKey().toString();
-//			final String strValue = entry.getValue().toString();
-//			atom.put( strName, strValue );
-			
 			listKeys.add( strName );
 		}
 		Collections.sort( listKeys );
 		for ( final String strKey : listKeys ) {
-//			final String strName = entry.getKey().toString();
-//			final String strValue = entry.getValue().toString();
 			final String strValue = properties.getProperty( strKey );
 			atom.put( strKey, strValue );
 		}
@@ -38,18 +33,9 @@ public class SystemAtoms {
 		final Atom atom = new Atom( Atom.Type.SYSTEM, NAME_ENVVARS, null );
 		final Map<String, String> map = System.getenv();
 		
-//		for ( final Entry<String, String> entry : properties.entrySet() ) {
-//			final String strName = entry.getKey();
-//			final String strValue = entry.getValue();
-//			atom.put( strName, strValue );
-//		}
-//		return atom;
-		
 		final List<String> listKeys = new LinkedList<String>( map.keySet() );
 		Collections.sort( listKeys );
 		for ( final String strKey : listKeys ) {
-//			final String strName = entry.getKey().toString();
-//			final String strValue = entry.getValue().toString();
 			final String strValue = map.get( strKey );
 			atom.put( strKey, strValue );
 		}

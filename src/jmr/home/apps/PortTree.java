@@ -23,16 +23,20 @@ public class PortTree implements IAtomConsumer {
 
 	private final Display display;
 
-	public final Map<CommPortIdentifier,ConnectorData> 
+	public final Map<String,ConnectorData> 
 			mapConnectors = new HashMap<>();
 	
 	public static class ConnectorData {
 		
 		public Planet planet;
 		
+		final CommPortIdentifier cpi;
+		
 		final TreeItem item;
 		
-		public ConnectorData( final TreeItem item ) {
+		public ConnectorData(	final CommPortIdentifier cpi,
+								final TreeItem item ) {
+			this.cpi = cpi;
 			this.item = item;
 		}
 		
@@ -68,7 +72,7 @@ public class PortTree implements IAtomConsumer {
 	}
 
 	public void closeConnectors() {
-		for ( final CommPortIdentifier port : mapConnectors.keySet() ) {
+		for ( final String port : mapConnectors.keySet() ) {
 			final ConnectorData cd = mapConnectors.get( port );
 			try {
 				if ( null!=cd && cd.planet!=null ) {
@@ -91,15 +95,16 @@ public class PortTree implements IAtomConsumer {
 			@Override
 			public void run() {
 				
+				final String strPort = port.getName();
 				final TreeItem item;
-				final ConnectorData cdExisting = mapConnectors.get( port );
+				final ConnectorData cdExisting = mapConnectors.get( strPort );
 				if ( null!=cdExisting ) {
 					item = cdExisting.item;
 					if ( null!=strStatus ) {
 						item.setText( 2, strStatus );
 					} else {
 						item.dispose();
-						mapConnectors.remove( port );
+						mapConnectors.remove( strPort );
 					}
 				} else {
 					if ( null!=strStatus ) {
@@ -112,12 +117,12 @@ public class PortTree implements IAtomConsumer {
 						item.setText( row );
 						
 						final ConnectorData 
-								cdNew = new PortTree.ConnectorData( item );
-						mapConnectors.put( port, cdNew );
+								cdNew = new PortTree.ConnectorData( port, item );
+						mapConnectors.put( strPort, cdNew );
 
 					} else {
 						item = null;
-						mapConnectors.remove( port );
+						mapConnectors.remove( strPort );
 					}
 				}
 				
@@ -126,34 +131,11 @@ public class PortTree implements IAtomConsumer {
 		});
 	}
 
-	private ConnectorData getDataForPort( final String strPort ) {
-		try {
-//			final CommPortIdentifier port = 
-//							CommPortIdentifier.getPortIdentifier( strPort );
-			CommPortIdentifier port = null; 
-			
-			for ( final CommPortIdentifier cpi : mapConnectors.keySet() ) {
-				if ( cpi.getName().equals( strPort ) ) {
-					port = cpi;
-				}
-			}
-			if ( null!=port ) {
-				final ConnectorData data = this.mapConnectors.get( port );
-				return data;
-			}
-//		} catch ( final NoSuchPortException e ) {
-		} catch ( final Exception e ) {
-			return null;
-		}
-		return null;
-	}
-	
 	public void setSerialNumber(	final String strPort, 
 									final String strSerialNumber ) {
-		final ConnectorData data = getDataForPort( strPort );
+		final ConnectorData data = mapConnectors.get( strPort );
 		if ( null==data ) return;
 		
-//		data.planet.setName( strSerialNumber );
 		display.asyncExec( new Runnable() {
 			@Override
 			public void run() {
