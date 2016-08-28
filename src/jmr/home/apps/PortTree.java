@@ -11,6 +11,7 @@ import org.eclipse.swt.widgets.TreeColumn;
 import org.eclipse.swt.widgets.TreeItem;
 
 import gnu.io.CommPortIdentifier;
+import jmr.home.comm.SerialConnector;
 import jmr.home.model.Atom;
 import jmr.home.model.IAtomConsumer;
 
@@ -86,8 +87,14 @@ public class PortTree implements IAtomConsumer {
 	}
 	
 	
-	public void setStatus(	final CommPortIdentifier port,
+	public void setStatus( 	final CommPortIdentifier port,
 							final String strStatus ) {
+		this.setStatus( port, strStatus, null );
+	}
+
+	public void setStatus(	final CommPortIdentifier port,
+							final String strStatus,
+							final SerialConnector conn ) {
 		if ( null==port ) return;
 
 		display.asyncExec( new Runnable() {
@@ -119,6 +126,9 @@ public class PortTree implements IAtomConsumer {
 						final ConnectorData 
 								cdNew = new PortTree.ConnectorData( port, item );
 						mapConnectors.put( strPort, cdNew );
+						if ( null!=conn ) {
+							cdNew.planet = new Planet( conn );
+						}
 
 					} else {
 						item = null;
@@ -143,6 +153,27 @@ public class PortTree implements IAtomConsumer {
 				data.item.setText( 2, "Live" );
 			}
 		});
+		
+		final Thread threadRequestUpdate = new Thread() {
+			@Override
+			public void run() {
+				try {
+					Thread.sleep( 1000 );
+					if ( null!=data && null!=data.planet ) {
+						if ( null!=data.planet.connector ) {
+							final boolean bSent = 
+									data.planet.connector.send( "REQ_UPDATE" );
+							if ( !bSent ) {
+								data.planet.setStatus( "Failed send()" );
+							}
+						}
+					}
+				} catch ( final InterruptedException e ) {
+					// if interrupted, just skip request.
+				}
+			}
+		};
+		threadRequestUpdate.start();
 	}
 
 	@Override

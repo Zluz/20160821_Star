@@ -217,7 +217,7 @@ public class Star {
 					connector.attachAtomTree( atomtree );
 
 					boolean bNewPortAdded = false;
-					porttree.setStatus( port, "Checking..." );
+					porttree.setStatus( port, "Checking...", connector );
 					
 					boolean bTimedout = false;
 					
@@ -251,6 +251,9 @@ public class Star {
 								
 								final long lTimeTimeout = 
 										System.currentTimeMillis() + 5000;
+								long lTimeSend = 
+										System.currentTimeMillis() + 500;
+								
 								boolean bAcceptGood = false;
 								@SuppressWarnings("unused")
 								boolean bAcceptBad = false;
@@ -265,6 +268,13 @@ public class Star {
 											bAcceptGood = true;
 											bWaiting = false;
 										}
+									}
+									if ( System.currentTimeMillis() > lTimeSend ) {
+										final boolean bSent = connector.send( "REQ_STATUS" );
+										if ( !bSent ) {
+											bAcceptBad = true;
+										}
+										lTimeSend = lTimeTimeout + 100; // turn off
 									}
 									bTimedout = System.currentTimeMillis() > lTimeTimeout; 
 								} while ( bWaiting && !bTimedout );

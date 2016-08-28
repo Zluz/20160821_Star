@@ -71,7 +71,7 @@ public class AtomTree implements IAtomValues, IAtomConsumer {
 
 	@Override
 	public void consume( final Atom atom ) {
-		setAtom( atom, "(consume)" );
+		setAtom( atom, atom.getName() );
 	}
 	
 	
@@ -182,9 +182,9 @@ public class AtomTree implements IAtomValues, IAtomConsumer {
 				tiSub.dispose();
 			}
 		}
-		if ( Atom.Type.EVENT.equals( atom.type ) ) {
-			item.setExpanded( true );
-		}
+//		if ( Atom.Type.EVENT.equals( atom.type ) ) {
+//			item.setExpanded( true );
+//		}
 	}
 
 	protected void _updateItem(	final TreeItem item, 

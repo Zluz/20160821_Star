@@ -220,7 +220,7 @@ public class SerialConnector implements IAtomMetadata {
 	
 	public boolean send( final String text ) {
 		try {
-			this.streamOutput.write( text.getBytes() );
+			this.streamOutput.write( (text + "\n").getBytes() );
 			return true;
 		} catch ( final IOException e ) {
 			// TODO Auto-generated catch block

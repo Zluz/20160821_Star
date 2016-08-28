@@ -4,13 +4,15 @@ import jmr.home.comm.SerialConnector;
 
 public class Planet {
 
-	private final SerialConnector connector;
+	public final SerialConnector connector;
 	
 	private String strName;
+	private String strStatus;
 	
 	public Planet(	final SerialConnector connector ) {
 		this.connector = connector;
 		this.strName = "<unknown>";
+		this.strStatus = "<unknown>";
 	}
 	
 	public void close() {
@@ -22,11 +24,16 @@ public class Planet {
 	}
 	
 	public String getStatus() {
-		return "<unknown>";
+		return this.strStatus;
 	}
 
 	public void setName( final String strName ) {
 		this.strName = strName;
+	}
+
+	public void setStatus( final String strStatus ) {
+		if ( null==strStatus ) return;
+		this.strStatus = strStatus;
 	}
 	
 }
