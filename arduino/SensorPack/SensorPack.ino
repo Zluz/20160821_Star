@@ -9,15 +9,18 @@
 
 /* Set up globals */
 
-#include <EEPROM.h>
+// to get "serial number" tag
+#include <EEPROM.h>	
 char sID[7];
-String strVersion = "20160827_1053";
+
+// software version
+const String strVersion = "20160827_1053";
 
 String inputString = "";         // a string to hold incoming data
 boolean stringComplete = false;  // whether the string is complete
 
 int iRemainingDelay;
-int iIdleDelay = 500;
+const int iIdleDelay = 500;
 
 
 /*

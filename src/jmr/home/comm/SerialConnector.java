@@ -83,7 +83,7 @@ public class SerialConnector implements IAtomMetadata {
 	private Thread threadReader;
 
 	private Thread threadWriter;
-	private AtomGenerator ag;
+	private InputStreamAtomProducer ag;
 
 	
 	public SerialConnector( final CommPortIdentifier port ) {
@@ -126,7 +126,7 @@ public class SerialConnector implements IAtomMetadata {
 		return true;
 	}
 	
-	public AtomGenerator getAtomGenerator() {
+	public InputStreamAtomProducer getAtomGenerator() {
 		return this.ag;
 	}
 	
@@ -150,7 +150,7 @@ public class SerialConnector implements IAtomMetadata {
 //			this.iGoodBytes = 0;
 
 			final InputStream input = serialPort.getInputStream();
-			this.ag = new AtomGenerator( input, port.getName(), this.atomtree );
+			this.ag = new InputStreamAtomProducer( input, port.getName(), this.atomtree );
 			this.ag.open();
 
 			if ( null==streamOutput ) {

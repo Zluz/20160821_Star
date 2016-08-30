@@ -12,7 +12,7 @@ import jmr.home.apps.AtomTree;
 import jmr.home.engine.Relay;
 import jmr.home.model.Atom;
 
-public class AtomGenerator {
+public class InputStreamAtomProducer {
 
 
 	private final InputStream input;
@@ -30,9 +30,9 @@ public class AtomGenerator {
 	
 	private final StreamBuffer sb = new StreamBuffer();
 
-	public AtomGenerator(	final InputStream input,
-							final String strPort,
-							final AtomTree tree ) {
+	public InputStreamAtomProducer(	final InputStream input,
+									final String strPort,
+									final AtomTree tree ) {
 		this.input = input;
 		this.tree = tree;
 		this.strPort = strPort;
@@ -75,7 +75,7 @@ public class AtomGenerator {
 
 
 	public Thread createThread() {
-		final Thread thread = new Thread( AtomGenerator.class.getSimpleName() ) {
+		final Thread thread = new Thread( InputStreamAtomProducer.class.getSimpleName() ) {
 			public void run() {
 				try {
 					do {

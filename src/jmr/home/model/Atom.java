@@ -4,6 +4,7 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.LinkedList;
 import java.util.List;
+import java.util.Map;
 
 import jmr.util.Util;
 
@@ -122,6 +123,17 @@ public class Atom extends HashMap<String,String> implements IAtomValues {
 				+ ", name:\"" + this.strName + "\""
 				+ ", " + listKeys.size() + " keys}";
 		return strResult;
+	}
+	
+	public String report() {
+		final StringBuffer strbuf = new StringBuffer();
+		strbuf.append( this.toString() + "\n" );
+		for ( final Map.Entry<String, String> entry : this.entrySet() ) {
+			final String strKey = entry.getKey();
+			final String strValue = entry.getValue();
+			strbuf.append( "\t\"" + strKey + "\"=\"" + strValue + "\"\n" );
+		}
+		return strbuf.toString();
 	}
 	
 }

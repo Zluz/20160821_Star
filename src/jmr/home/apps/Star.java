@@ -21,13 +21,13 @@ import org.eclipse.swt.widgets.Shell;
 import org.eclipse.swt.widgets.Text;
 
 import gnu.io.CommPortIdentifier;
-import jmr.home.comm.AtomGenerator;
+import jmr.home.comm.HttpServerAtomProducer;
+import jmr.home.comm.InputStreamAtomProducer;
 import jmr.home.comm.SerialConnector;
 import jmr.home.comm.SerialConnector.ComBaud;
 import jmr.home.engine.Processor;
 import jmr.home.engine.Relay;
 import jmr.home.model.SystemAtoms;
-import jmr.integrate.usbdeview.USBDeview;
 
 public class Star {
 	
@@ -66,6 +66,7 @@ public class Star {
 		log( "Star initialized." );
 		log( "Shell size: " + this.shell.getSize() );
 		
+		
 		startPortMonitor();
 		
 		this.atomtree.setAtom( SystemAtoms.generateJavaProperties(), "(system)" );
@@ -74,8 +75,11 @@ public class Star {
 		
 		Relay.get();
 		
-		USBDeview.initialize( 1 );
-		USBDeview.get().call();
+		HttpServerAtomProducer.get().open();
+		
+		// disable for now.
+//		USBDeview.initialize( 1 );
+//		USBDeview.get().call();
 	}
 	
 	
@@ -247,7 +251,7 @@ public class Star {
 								log( strMessage, false );
 
 
-								final AtomGenerator ag = connector.getAtomGenerator();
+								final InputStreamAtomProducer ag = connector.getAtomGenerator();
 								
 								final long lTimeTimeout = 
 										System.currentTimeMillis() + 5000;
