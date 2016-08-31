@@ -1,0 +1,572 @@
+<!DOCTYPE html>
+<html lang="en"><head>
+<meta http-equiv="content-type" content="text/html; charset=UTF-8">
+  <meta charset="utf-8">
+  <title>0104X4 - Overview - LuCI</title>
+  <!--[if lt IE 9]><script src="/luci-static/bootstrap/html5.js"></script><![endif]-->
+  <link rel="stylesheet" href="0104X4_status_files/cascade.css">
+  <link rel="shortcut icon" href="http://192.168.1.9/luci-static/bootstrap/favicon.ico">
+  <script src="0104X4_status_files/xhr.js"></script>
+ </head>
+
+ <body class="lang_enOverview">
+  <header>
+   <div class="fill">
+    <div class="container">
+     <a class="brand" href="#">0104X4</a>
+     <ul class="nav">
+        <li class="dropdown">
+            <a class="menu" href="http://192.168.1.9/cgi-bin/luci/;stok=cfcb1213850ce78b19747dbe22095e93/admin/status">Status</a>
+	 <ul class="dropdown-menu">
+	  <li><a href="http://192.168.1.9/cgi-bin/luci/;stok=cfcb1213850ce78b19747dbe22095e93/admin/status/overview">Overview</a></li>
+	  <li><a href="http://192.168.1.9/cgi-bin/luci/;stok=cfcb1213850ce78b19747dbe22095e93/admin/status/iptables">Firewall</a></li>
+	  <li><a href="http://192.168.1.9/cgi-bin/luci/;stok=cfcb1213850ce78b19747dbe22095e93/admin/status/routes">Routes</a></li>
+	  <li><a href="http://192.168.1.9/cgi-bin/luci/;stok=cfcb1213850ce78b19747dbe22095e93/admin/status/syslog">System Log</a></li>
+	  <li><a href="http://192.168.1.9/cgi-bin/luci/;stok=cfcb1213850ce78b19747dbe22095e93/admin/status/dmesg">Kernel Log</a></li>
+	  <li><a href="http://192.168.1.9/cgi-bin/luci/;stok=cfcb1213850ce78b19747dbe22095e93/admin/status/processes">Processes</a></li>
+	  <li><a href="http://192.168.1.9/cgi-bin/luci/;stok=cfcb1213850ce78b19747dbe22095e93/admin/status/realtime">Realtime Graphs</a></li>
+	</ul>
+        </li>
+	
+        <li class="dropdown">
+            <a class="menu" href="http://192.168.1.9/cgi-bin/luci/;stok=cfcb1213850ce78b19747dbe22095e93/admin/system">System</a>
+	 <ul class="dropdown-menu">
+	  <li><a href="http://192.168.1.9/cgi-bin/luci/;stok=cfcb1213850ce78b19747dbe22095e93/admin/system/system">System</a></li>
+	  <li><a href="http://192.168.1.9/cgi-bin/luci/;stok=cfcb1213850ce78b19747dbe22095e93/admin/system/admin">Administration</a></li>
+	  <li><a href="http://192.168.1.9/cgi-bin/luci/;stok=cfcb1213850ce78b19747dbe22095e93/admin/system/packages">Software</a></li>
+	  <li><a href="http://192.168.1.9/cgi-bin/luci/;stok=cfcb1213850ce78b19747dbe22095e93/admin/system/startup">Startup</a></li>
+	  <li><a href="http://192.168.1.9/cgi-bin/luci/;stok=cfcb1213850ce78b19747dbe22095e93/admin/system/crontab">Scheduled Tasks</a></li>
+	  <li><a href="http://192.168.1.9/cgi-bin/luci/;stok=cfcb1213850ce78b19747dbe22095e93/admin/system/fstab">Mount Points</a></li>
+	  <li><a href="http://192.168.1.9/cgi-bin/luci/;stok=cfcb1213850ce78b19747dbe22095e93/admin/system/leds">LED Configuration</a></li>
+	  <li><a href="http://192.168.1.9/cgi-bin/luci/;stok=cfcb1213850ce78b19747dbe22095e93/admin/system/flashops">Backup / Flash Firmware</a></li>
+	  <li><a href="http://192.168.1.9/cgi-bin/luci/;stok=cfcb1213850ce78b19747dbe22095e93/admin/system/reboot">Reboot</a></li>
+	</ul>
+        </li>
+	
+        <li class="dropdown">
+            <a class="menu" href="http://192.168.1.9/cgi-bin/luci/;stok=cfcb1213850ce78b19747dbe22095e93/admin/network">Network</a>
+	 <ul class="dropdown-menu">
+	  <li><a href="http://192.168.1.9/cgi-bin/luci/;stok=cfcb1213850ce78b19747dbe22095e93/admin/network/network">Interfaces</a></li>
+	  <li><a href="http://192.168.1.9/cgi-bin/luci/;stok=cfcb1213850ce78b19747dbe22095e93/admin/network/wireless">Wifi</a></li>
+	  <li><a href="http://192.168.1.9/cgi-bin/luci/;stok=cfcb1213850ce78b19747dbe22095e93/admin/network/dhcp">DHCP and DNS</a></li>
+	  <li><a href="http://192.168.1.9/cgi-bin/luci/;stok=cfcb1213850ce78b19747dbe22095e93/admin/network/hosts">Hostnames</a></li>
+	  <li><a href="http://192.168.1.9/cgi-bin/luci/;stok=cfcb1213850ce78b19747dbe22095e93/admin/network/routes">Static Routes</a></li>
+	  <li><a href="http://192.168.1.9/cgi-bin/luci/;stok=cfcb1213850ce78b19747dbe22095e93/admin/network/firewall">Firewall</a></li>
+	  <li><a href="http://192.168.1.9/cgi-bin/luci/;stok=cfcb1213850ce78b19747dbe22095e93/admin/network/diagnostics">Diagnostics</a></li>
+	</ul>
+        </li>
+	
+         <li>
+	        <a href="http://192.168.1.9/cgi-bin/luci/;stok=cfcb1213850ce78b19747dbe22095e93/admin/logout">Logout</a>
+        </li> 
+    
+	</ul>
+
+	
+	<div class="pull-right">
+	
+      <span id="xhr_poll_status" style="" onclick="XHR.running() ? XHR.halt() : XHR.run()">
+       <span class="label success" id="xhr_poll_status_on">Auto Refresh on</span>
+       <span class="label" id="xhr_poll_status_off" style="display:none">Auto Refresh off</span>
+      </span>
+     </div>
+	
+    </div>
+   </div>
+  </header><div id="maincontent" class="container">
+
+
+
+
+<script type="text/javascript" src="0104X4_status_files/cbi.js"></script>
+<script type="text/javascript">//<![CDATA[
+	function progressbar(v, m)
+	{
+		var vn = parseInt(v) || 0;
+		var mn = parseInt(m) || 100;
+		var pc = Math.floor((100 / mn) * vn);
+
+		return String.format(
+			'<div style="width:200px; position:relative; border:1px solid #999999">' +
+				'<div style="background-color:#CCCCCC; width:%d%%; height:15px">' +
+					'<div style="position:absolute; left:0; top:0; text-align:center; width:100%%; color:#000000">' +
+						'<small>%s / %s (%d%%)</small>' +
+					'</div>' +
+				'</div>' +
+			'</div>', pc, v, m, pc
+		);
+	}
+
+	var wifidevs = null;
+	var arptable = null;
+
+	XHR.poll(5, '/cgi-bin/luci/;stok=cfcb1213850ce78b19747dbe22095e93/admin/status/overview', { status: 1 },
+		function(x, info)
+		{
+			var si = document.getElementById('wan4_i');
+			var ss = document.getElementById('wan4_s');
+			var ifc = info.wan;
+
+			if (ifc && ifc.ifname && ifc.proto != 'none')
+			{
+				var s = String.format(
+					'<strong>Type: </strong>%s<br />' +
+					'<strong>Address: </strong>%s<br />' +
+					'<strong>Netmask: </strong>%s<br />' +
+					'<strong>Gateway: </strong>%s<br />',
+						ifc.proto,
+						(ifc.ipaddr) ? ifc.ipaddr : '0.0.0.0',
+						(ifc.netmask && ifc.netmask != ifc.ipaddr) ? ifc.netmask : '255.255.255.255',
+						(ifc.gwaddr) ? ifc.gwaddr : '0.0.0.0'
+				);
+
+				for (var i = 0; i < ifc.dns.length; i++)
+				{
+					s += String.format(
+						'<strong>DNS %d: </strong>%s<br />',
+						i + 1, ifc.dns[i]
+					);
+				}
+
+				if (ifc.expires > -1)
+				{
+					s += String.format(
+						'<strong>Expires: </strong>%t<br />',
+						ifc.expires
+					);
+				}
+
+				if (ifc.uptime > 0)
+				{
+					s += String.format(
+						'<strong>Connected: </strong>%t<br />',
+						ifc.uptime
+					);
+				}
+
+				ss.innerHTML = String.format('<small>%s</small>', s);
+				si.innerHTML = String.format(
+					'<img src="/luci-static/resources/icons/ethernet.png" />' +
+					'<br /><small><a href="%s">%s</a></small>',
+						ifc.link, ifc.ifname
+				);
+			}
+			else
+			{
+				si.innerHTML = '<img src="/luci-static/resources/icons/ethernet_disabled.png" /><br /><small>?</small>';
+				ss.innerHTML = '<em>Not connected</em>';
+			}
+
+			
+
+			
+			var ls = document.getElementById('lease_status_table');
+			if (ls)
+			{
+				/* clear all rows */
+				while( ls.rows.length > 1 )
+					ls.rows[0].parentNode.deleteRow(1);
+
+				for( var i = 0; i < info.leases.length; i++ )
+				{
+					var timestr;
+
+					if (info.leases[i].expires <= 0)
+						timestr = '<em>expired</em>';
+					else
+						timestr = String.format('%t', info.leases[i].expires);
+
+					var tr = ls.rows[0].parentNode.insertRow(-1);
+						tr.className = 'cbi-section-table-row cbi-rowstyle-' + ((i % 2) + 1);
+
+					tr.insertCell(-1).innerHTML = info.leases[i].hostname ? info.leases[i].hostname : '?';
+					tr.insertCell(-1).innerHTML = info.leases[i].ipaddr;
+					tr.insertCell(-1).innerHTML = info.leases[i].macaddr;
+					tr.insertCell(-1).innerHTML = timestr;
+				}
+
+				if( ls.rows.length == 1 )
+				{
+					var tr = ls.rows[0].parentNode.insertRow(-1);
+						tr.className = 'cbi-section-table-row';
+
+					var td = tr.insertCell(-1);
+						td.colSpan = 4;
+						td.innerHTML = '<em><br />There are no active leases.</em>';
+				}
+			}
+
+			var ls6 = document.getElementById('lease6_status_table');
+			if (ls6 && info.leases6)
+			{
+				ls6.parentNode.style.display = 'block';
+
+				/* clear all rows */
+				while( ls6.rows.length > 1 )
+					ls6.rows[0].parentNode.deleteRow(1);
+
+				for( var i = 0; i < info.leases6.length; i++ )
+				{
+					var timestr;
+
+					if (info.leases6[i].expires <= 0)
+						timestr = '<em>expired</em>';
+					else
+						timestr = String.format('%t', info.leases6[i].expires);
+
+					var tr = ls6.rows[0].parentNode.insertRow(-1);
+						tr.className = 'cbi-section-table-row cbi-rowstyle-' + ((i % 2) + 1);
+
+					tr.insertCell(-1).innerHTML = info.leases6[i].hostname ? info.leases6[i].hostname : '?';
+					tr.insertCell(-1).innerHTML = info.leases6[i].ip6addr;
+					tr.insertCell(-1).innerHTML = info.leases6[i].duid;
+					tr.insertCell(-1).innerHTML = timestr;
+				}
+
+				if( ls6.rows.length == 1 )
+				{
+					var tr = ls6.rows[0].parentNode.insertRow(-1);
+						tr.className = 'cbi-section-table-row';
+
+					var td = tr.insertCell(-1);
+						td.colSpan = 4;
+						td.innerHTML = '<em><br />There are no active leases.</em>';
+				}
+			}
+			
+
+			
+			var assoclist = [ ];
+
+			var ws = document.getElementById('wifi_status_table');
+			if (ws)
+			{
+				var wsbody = ws.rows[0].parentNode;
+				while (ws.rows.length > 0)
+					wsbody.deleteRow(0);
+
+				for (var didx = 0; didx < info.wifinets.length; didx++)
+				{
+					var dev = info.wifinets[didx];
+
+					var tr = wsbody.insertRow(-1);
+					var td;
+
+					td = tr.insertCell(-1);
+					td.width     = "33%";
+					td.innerHTML = dev.name;
+					td.style.verticalAlign = "top";
+
+					td = tr.insertCell(-1);
+
+					var s = '';
+
+					for (var nidx = 0; nidx < dev.networks.length; nidx++)
+					{
+						var net = dev.networks[nidx];
+						var is_assoc = (net.bssid != '00:00:00:00:00:00' && net.channel);
+
+						var icon;
+						if (!is_assoc)
+							icon = "/luci-static/resources/icons/signal-none.png";
+						else if (net.quality == 0)
+							icon = "/luci-static/resources/icons/signal-0.png";
+						else if (net.quality < 25)
+							icon = "/luci-static/resources/icons/signal-0-25.png";
+						else if (net.quality < 50)
+							icon = "/luci-static/resources/icons/signal-25-50.png";
+						else if (net.quality < 75)
+							icon = "/luci-static/resources/icons/signal-50-75.png";
+						else
+							icon = "/luci-static/resources/icons/signal-75-100.png";
+
+						s += String.format(
+							'<table><tr><td style="text-align:center; width:32px; padding:3px">' +
+								'<img src="%s" title="Signal: %d dBm / Noise: %d dBm" />' +
+								'<br /><small>%d%%</small>' +
+							'</td><td style="text-align:left; padding:3px"><small>' +
+								'<strong>SSID:</strong> <a href="%s">%h</a><br />' +
+								'<strong>Mode:</strong> %s<br />' +
+								'<strong>Channel:</strong> %d (%.3f GHz)<br />' +
+								'<strong>Bitrate:</strong> %s Mbit/s<br />',
+								icon, net.signal, net.noise,
+								net.quality,
+								net.link, net.ssid,
+								net.mode,
+								net.channel, net.frequency,
+								net.bitrate || '?'
+						);
+
+						if (is_assoc)
+						{
+							s += String.format(
+								'<strong>BSSID:</strong> %s<br />' +
+								'<strong>Encryption:</strong> %s',
+									net.bssid,
+									net.encryption
+							);
+						}
+						else
+						{
+							s += '<em>Wireless is disabled or not associated</em>';
+						}
+
+						s += '</small></td></tr></table>';
+
+						for (var bssid in net.assoclist)
+						{
+							assoclist.push({
+								bssid:    bssid,
+								signal:   net.assoclist[bssid].signal,
+								noise:    net.assoclist[bssid].noise,
+								rx_rate:  net.assoclist[bssid].rx_rate,
+								rx_mcs:   net.assoclist[bssid].rx_mcs,
+								rx_40mhz: net.assoclist[bssid].rx_40mhz,
+								tx_rate:  net.assoclist[bssid].tx_rate,
+								tx_mcs:   net.assoclist[bssid].tx_mcs,
+								tx_40mhz: net.assoclist[bssid].tx_40mhz,
+								link:     net.link,
+								name:     net.name
+							});
+						}
+					}
+
+					if (!s)
+						s = '<em>No information available</em>';
+
+					td.innerHTML = s;
+				}
+			}
+
+			var ac = document.getElementById('wifi_assoc_table');
+			if (ac)
+			{
+				/* clear all rows */
+				while( ac.rows.length > 1 )
+					ac.rows[0].parentNode.deleteRow(1);
+
+				assoclist.sort(function(a, b) {
+					return (a.name == b.name)
+						? (a.bssid < b.bssid)
+						: (a.name  > b.name )
+					;
+				});
+
+				for( var i = 0; i < assoclist.length; i++ )
+				{
+					var tr = ac.rows[0].parentNode.insertRow(-1);
+						tr.className = 'cbi-section-table-row cbi-rowstyle-' + (1 + (i % 2));
+
+					var icon;
+					var q = (-1 * (assoclist[i].noise - assoclist[i].signal)) / 5;
+					if (q < 1)
+						icon = "/luci-static/resources/icons/signal-0.png";
+					else if (q < 2)
+						icon = "/luci-static/resources/icons/signal-0-25.png";
+					else if (q < 3)
+						icon = "/luci-static/resources/icons/signal-25-50.png";
+					else if (q < 4)
+						icon = "/luci-static/resources/icons/signal-50-75.png";
+					else
+						icon = "/luci-static/resources/icons/signal-75-100.png";
+
+					tr.insertCell(-1).innerHTML = String.format(
+						'<img src="%s" title="Signal: %d dBm / Noise: %d dBm" />',
+						icon, assoclist[i].signal, assoclist[i].noise
+					);
+
+					tr.insertCell(-1).innerHTML = assoclist[i].bssid;
+
+					tr.insertCell(-1).innerHTML = String.format(
+						'<a href="%s">%s</a>',
+							assoclist[i].link,
+							'%h'.format(assoclist[i].name).nobr()
+					);
+
+					tr.insertCell(-1).innerHTML = String.format('%d dBm', assoclist[i].signal).nobr();
+					tr.insertCell(-1).innerHTML = String.format('%d dBm', assoclist[i].noise).nobr();
+
+					tr.insertCell(-1).innerHTML = (assoclist[i].rx_mcs > -1)
+						? String.format('%.1f Mbit/s, MCS %d, %dMHz', assoclist[i].rx_rate / 1000, assoclist[i].rx_mcs, assoclist[i].rx_40mhz ? 40 : 20).nobr()
+						: String.format('%.1f Mbit/s', assoclist[i].rx_rate / 1000).nobr()
+					;
+
+					tr.insertCell(-1).innerHTML = (assoclist[i].tx_mcs > -1)
+						? String.format('%.1f Mbit/s, MCS %d, %dMHz', assoclist[i].tx_rate / 1000, assoclist[i].tx_mcs, assoclist[i].tx_40mhz ? 40 : 20).nobr()
+						: String.format('%.1f Mbit/s', assoclist[i].tx_rate / 1000).nobr()
+					;
+				}
+
+				if (ac.rows.length == 1)
+				{
+					var tr = ac.rows[0].parentNode.insertRow(-1);
+						tr.className = 'cbi-section-table-row';
+
+					var td = tr.insertCell(-1);
+						td.colSpan = 7;
+						td.innerHTML = '<br /><em>No information available</em>';
+				}
+			}
+			
+
+			var e;
+
+			if (e = document.getElementById('localtime'))
+				e.innerHTML = info.localtime;
+
+			if (e = document.getElementById('uptime'))
+				e.innerHTML = String.format('%t', info.uptime);
+
+			if (e = document.getElementById('loadavg'))
+				e.innerHTML = String.format('%.02f, %.02f, %.02f',
+					info.loadavg[0], info.loadavg[1], info.loadavg[2]);
+
+			if (e = document.getElementById('memtotal'))
+				e.innerHTML = progressbar(
+					(info.memfree + info.membuffers + info.memcached) + " kB",
+					info.memtotal + " kB"
+				);
+
+			if (e = document.getElementById('memfree'))
+				e.innerHTML = progressbar(
+					info.memfree + " kB", info.memtotal + " kB"
+				);
+
+			if (e = document.getElementById('memcache'))
+				e.innerHTML = progressbar(
+					info.memcached + " kB", info.memtotal + " kB"
+				);
+
+			if (e = document.getElementById('membuff'))
+				e.innerHTML = progressbar(
+					info.membuffers + " kB", info.memtotal + " kB"
+				);
+
+			if (e = document.getElementById('conns'))
+				e.innerHTML = progressbar(info.conncount, info.connmax);
+
+		}
+	);
+//]]></script>
+
+<h2><a id="content" name="content">Status</a></h2>
+
+<fieldset class="cbi-section">
+	<legend>System</legend>
+
+	<table cellspacing="10" width="100%">
+		<tbody><tr><td width="33%">Hostname</td><td>0104X4</td></tr>
+		<tr><td width="33%">Model</td><td>Iduino-V1                                                              </td></tr>
+		<tr><td width="33%">Firmware Version</td><td>
+			Iduino-V1 geeetech-2.0.2 		</td></tr>
+		<tr><td width="33%">Kernel Version</td><td>3.3.8
+</td></tr>
+		<tr><td width="33%">Local Time</td><td id="localtime">Tue Aug 30 10:18:37 2016</td></tr>
+		<tr><td width="33%">Uptime</td><td id="uptime">5h 32m 44s</td></tr>
+		<tr><td width="33%">Load Average</td><td id="loadavg">0.00, 0.01, 0.05</td></tr>
+	</tbody></table>
+</fieldset>
+
+<fieldset class="cbi-section">
+	<legend>Memory</legend>
+
+	<table cellspacing="10" width="100%">
+		<tbody><tr><td width="33%">Total Available</td><td id="memtotal"><div style="width:200px; position:relative; border:1px solid #999999"><div style="background-color:#CCCCCC; width:75%; height:15px"><div style="position:absolute; left:0; top:0; text-align:center; width:100%; color:#000000"><small>45980 kB / 61116 kB (75%)</small></div></div></div></td></tr>
+		<tr><td width="33%">Free</td><td id="memfree"><div style="width:200px; position:relative; border:1px solid #999999"><div style="background-color:#CCCCCC; width:44%; height:15px"><div style="position:absolute; left:0; top:0; text-align:center; width:100%; color:#000000"><small>27464 kB / 61116 kB (44%)</small></div></div></div></td></tr>
+		<tr><td width="33%">Cached</td><td id="memcache"><div style="width:200px; position:relative; border:1px solid #999999"><div style="background-color:#CCCCCC; width:23%; height:15px"><div style="position:absolute; left:0; top:0; text-align:center; width:100%; color:#000000"><small>14112 kB / 61116 kB (23%)</small></div></div></div></td></tr>
+		<tr><td width="33%">Buffered</td><td id="membuff"><div style="width:200px; position:relative; border:1px solid #999999"><div style="background-color:#CCCCCC; width:7%; height:15px"><div style="position:absolute; left:0; top:0; text-align:center; width:100%; color:#000000"><small>4404 kB / 61116 kB (7%)</small></div></div></div></td></tr>
+	</tbody></table>
+</fieldset>
+
+<fieldset class="cbi-section">
+	<legend>Network</legend>
+
+	<table cellspacing="10" width="100%">
+		<tbody><tr><td style="vertical-align:top" width="33%">IPv4 WAN Status</td><td>
+			<table><tbody><tr>
+				<td id="wan4_i" style="width:16px; text-align:center; padding:3px"><img src="0104X4_status_files/ethernet.png"><br><small><a href="http://192.168.1.9/cgi-bin/luci/;stok=cfcb1213850ce78b19747dbe22095e93/admin/network/network/lan">wlan0</a></small></td>
+				<td id="wan4_s" style="vertical-align:middle; padding: 3px"><small><strong>Type: </strong>dhcp<br><strong>Address: </strong>192.168.2.23<br><strong>Netmask: </strong>255.255.255.0<br><strong>Gateway: </strong>192.168.2.1<br><strong>DNS 1: </strong>192.168.2.1<br><strong>Connected: </strong>5h 31m 47s<br></small></td>
+			</tr></tbody></table>
+		</td></tr>
+		
+		<tr><td width="33%">Active Connections</td><td id="conns"><div style="width:200px; position:relative; border:1px solid #999999"><div style="background-color:#CCCCCC; width:0%; height:15px"><div style="position:absolute; left:0; top:0; text-align:center; width:100%; color:#000000"><small>26 / 16384 (0%)</small></div></div></div></td></tr>
+	</tbody></table>
+</fieldset>
+
+
+<fieldset class="cbi-section">
+	<legend>DHCP Leases</legend>
+
+	<table class="cbi-section-table" id="lease_status_table">
+		<tbody><tr class="cbi-section-table-titles">
+			<th class="cbi-section-table-cell">Hostname</th>
+			<th class="cbi-section-table-cell">IPv4-Address</th>
+			<th class="cbi-section-table-cell">MAC-Address</th>
+			<th class="cbi-section-table-cell">Leasetime remaining</th>
+		</tr>
+		
+	<tr class="cbi-section-table-row"><td colspan="4"><em><br>There are no active leases.</em></td></tr></tbody></table>
+</fieldset>
+
+<fieldset class="cbi-section" style="display:none">
+	<legend>DHCPv6 Leases</legend>
+
+	<table class="cbi-section-table" id="lease6_status_table">
+		<tbody><tr class="cbi-section-table-titles">
+			<th class="cbi-section-table-cell">Hostname</th>
+			<th class="cbi-section-table-cell">IPv6-Address</th>
+			<th class="cbi-section-table-cell">DUID</th>
+			<th class="cbi-section-table-cell">Leasetime remaining</th>
+		</tr>
+		<tr class="cbi-section-table-row">
+			<td colspan="4"><em><br>Collecting data...</em></td>
+		</tr>
+	</tbody></table>
+</fieldset>
+
+
+
+<fieldset class="cbi-section">
+	<legend>Wireless</legend>
+
+	<table id="wifi_status_table" cellspacing="10" width="100%">
+		<tbody>
+	<tr><td style="vertical-align: top;" width="33%">Generic 802.11bgn Wireless Controller (radio0)</td><td><table><tbody><tr><td style="text-align:center; width:32px; padding:3px"><img src="0104X4_status_files/signal-75-100.png" title="Signal: -53 dBm / Noise: -95 dBm"><br><small>81%</small></td><td style="text-align:left; padding:3px"><small><strong>SSID:</strong> <a href="http://192.168.1.9/cgi-bin/luci/;stok=cfcb1213850ce78b19747dbe22095e93/admin/network/wireless/radio0.network1">Hazysky4</a><br><strong>Mode:</strong> Client<br><strong>Channel:</strong> 8 (2.447 GHz)<br><strong>Bitrate:</strong> 54 Mbit/s<br><strong>BSSID:</strong> 10:C3:7B:DF:B6:28<br><strong>Encryption:</strong> WPA2 PSK (CCMP)</small></td></tr></tbody></table></td></tr></tbody></table>
+</fieldset>
+
+<fieldset class="cbi-section">
+	<legend>Associated Stations</legend>
+
+	<table class="cbi-section-table" id="wifi_assoc_table">
+		<tbody><tr class="cbi-section-table-titles">
+			<th class="cbi-section-table-cell">&nbsp;</th>
+			<th class="cbi-section-table-cell">MAC-Address</th>
+			<th class="cbi-section-table-cell">Network</th>
+			<th class="cbi-section-table-cell">Signal</th>
+			<th class="cbi-section-table-cell">Noise</th>
+			<th class="cbi-section-table-cell">RX Rate</th>
+			<th class="cbi-section-table-cell">TX Rate</th>
+		</tr>
+		
+	<tr class="cbi-section-table-row cbi-rowstyle-1"><td><img src="0104X4_status_files/signal-75-100.png" title="Signal: -53 dBm / Noise: -95 dBm"></td><td>10:C3:7B:DF:B6:28</td><td><a href="http://192.168.1.9/cgi-bin/luci/;stok=cfcb1213850ce78b19747dbe22095e93/admin/network/wireless/radio0.network1">Client&nbsp;"Hazysky4"</a></td><td>-53&nbsp;dBm</td><td>-95&nbsp;dBm</td><td>54.0&nbsp;Mbit/s,&nbsp;MCS&nbsp;0,&nbsp;20MHz</td><td>54.0&nbsp;Mbit/s,&nbsp;MCS&nbsp;0,&nbsp;20MHz</td></tr></tbody></table>
+</fieldset>
+
+   <footer><a href="http://luci.subsignal.org/">Powered by LuCI 0.11.1 Release (0.11.1)</a>
+
+    
+     <ul class="breadcrumb pull-right" id="modemenu">
+	    
+		    <li class="active"><a href="http://192.168.1.9/cgi-bin/luci/;stok=cfcb1213850ce78b19747dbe22095e93/admin/">Administration</a> <span class="divider">|</span></li>
+	    
+		    <li><a href="http://192.168.1.9/cgi-bin/luci/;stok=cfcb1213850ce78b19747dbe22095e93/webpanel/">Iduino Web Panel</a> <span class="divider">|</span></li>
+	    
+     </ul>
+    
+   </footer>
+   </div>
+  
+ 
+
+
+
+</body></html>

@@ -19,6 +19,54 @@ available commands (?)
   <request startup/identification> // request startup info, terminates wait cycle
   <request regular/status> // terminates current wait cycle
 
+[notes - previous]
+
+arduino
+    6 analog inputs
+    14 digital I/O (3 PWM)
+
+common sensors: (HT)
+    ambient humidity
+    ambient temperature
+
+
+shop
+    (HT)
+    wet floor
+    wet wall
+    window well water level
+
+sump
+    (HT)
+    battery power
+    water level
+
+garage
+    (HT)
+    digital (6x): fully closed, fully open
+    digital (3x): entry beam crossed
+    entry door open
+
+    interior motion sensor?
+    exterior motion sensors?
+        driveway, walkway
+    car sensor, driveway?
+    car sensor, individual garage?
+   
+
+    CONTROL:
+    3x garage signal
+    entry door lock?
+    garage lights
+    alarm?
+    
+outside
+    (HT)
+    light
+    air pressure    
+
+
+[code notes - dynamic swt loading]
 
 // demo.txl.SWTLoader.java (copied, notes)
 

@@ -1,0 +1,12 @@
+
+Iduino-V1 geeetech-2.0.2
+	build:  Wed Jan 14 17:10:01 CST 2015
+
+
+Network: WAN
+	MAC-Address:  A8:40:41:15:CC:33
+	IPv4:  192.168.1.9/24, 172.31.255.254/30
+
+	Address 192.168.1.9 
+	Netmask 255.255.255.0 
+	MAC Address A8:40:41:15:CC:33 

@@ -1,0 +1,227 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<!--
+ This file is part of YunWebUI.
+
+ YunWebUI is free software; you can redistribute it and/or modify
+ it under the terms of the GNU General Public License as published by
+ the Free Software Foundation; either version 2 of the License, or
+ (at your option) any later version.
+
+ This program is distributed in the hope that it will be useful,
+ but WITHOUT ANY WARRANTY; without even the implied warranty of
+ MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ GNU General Public License for more details.
+
+ You should have received a copy of the GNU General Public License
+ along with this program; if not, write to the Free Software
+ Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
+
+ As a special exception, you may use this file as part of a free software
+ library without restriction.  Specifically, if other files instantiate
+ templates or use macros or inline functions from this file, or you compile
+ this file and link it with other files to produce an executable, this
+ file does not by itself cause the resulting executable to be covered by
+ the GNU General Public License.  This exception does not however
+ invalidate any other reasons why the executable file might be covered by
+ the GNU General Public License.
+
+ Copyright 2013 Arduino LLC (http://www.arduino.cc/)
+-->
+<html xmlns="http://www.w3.org/1999/xhtml"><head>
+  <meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+  <meta name="viewport" content="initial-scale=1.0, user-scalable=no">
+  <link rel="stylesheet" type="text/css" href="0104X4_welcome_files/style.css">
+  <title>Iduino Yun</title>
+</head>
+<body>
+<div id="container">
+  <div id="header">
+    <div class="wrapper">
+      <h1>Iduino Yun</h1>
+      <div id="logo"><a href="http://192.168.1.9/cgi-bin/luci/;stok=e02be5de896a7e7365a5bf9e15fb1020/webpanel"><img src="0104X4_welcome_files/logo.png" alt="Iduino Yun"></a></div>
+    </div>
+  </div>
+  <div id="content">
+    <div class="wrapper">
+      <div id="welcome_container">
+        <h2>Welcome to use <strong>0104X4</strong></h2>
+      </div>
+      <div id="configurebtn_container">
+        <form method="get" action="/cgi-bin/luci/;stok=e02be5de896a7e7365a5bf9e15fb1020/webpanel/config">
+          <input class="btTxt submit saveForm" value="System" onclick="javascript:return goto('/cgi-bin/luci/;stok=e02be5de896a7e7365a5bf9e15fb1020/webpanel/config');" type="submit">
+        </form>
+        <form method="get" action="/cgi-bin/luci/;stok=e02be5de896a7e7365a5bf9e15fb1020/webpanel/sensor">
+          <input class="btTxt submit saveForm" value="Sensors" onclick="javascript:return goto('/cgi-bin/luci/;stok=e02be5de896a7e7365a5bf9e15fb1020/webpanel/sensor');" type="submit">
+        </form>
+        <form method="get" action="/cgi-bin/luci/;stok=e02be5de896a7e7365a5bf9e15fb1020/webpanel/flashops">
+          <input class="btTxt submit saveForm" value="Upgrade" onclick="javascript:return goto('/cgi-bin/luci/;stok=e02be5de896a7e7365a5bf9e15fb1020/webpanel/flashops');" type="submit">
+        </form>
+      </div>
+    </div>
+    <div class="wrapper divide" id="recap">
+      <div id="dashboard_container">
+        <div id="sections_container">
+	   <div class="section">
+		<h3>Version Info</h3>
+		<p>
+		   <span class="row">
+                    <span class="desc">Firmware Version:</span>
+                    <span class="val">Iduino-V1 geeetech-2.0.2 </span>
+                 </span>
+		   <span class="row">
+                    <span class="desc">Build Time:</span>
+                       <span class="val">Wed Jan 14 17:10:01 CST 2015</span>
+                 </span>
+		</p>
+	   </div>
+          
+          <div class="section">
+            <h3>WiFi (wlan0) <span class="connected">connected</span></h3>
+            <table>
+              <tbody><tr></tr>
+            </tbody></table>
+            <p>
+              
+                <span class="row">
+                  <span class="desc">Address</span>
+                  <span class="val">192.168.2.23</span>
+                </span>
+                <span class="row">
+                  <span class="desc">Netmask</span>
+                  <span class="val">255.255.255.0</span>
+                </span>
+              
+              <span class="row">
+                <span class="desc">MAC Address</span>
+                <span class="val">A8:40:41:15:CC:30</span>
+              </span>
+              <span class="row">
+                <span class="desc">Received</span>
+                <span class="val">1.31 MB</span>
+              </span>
+              <span class="row">
+                <span class="desc">Trasmitted</span>
+                <span class="val">44.90 KB</span>
+              </span>
+            </p>
+          </div>
+          
+          <div class="section">
+            <h3>Interface eth0 <span class="connected">connected</span></h3>
+            <table>
+              <tbody><tr></tr>
+            </tbody></table>
+            <p>
+              
+                <span class="row">
+                  <span class="desc">Address</span>
+                  <span class="val">192.168.1.9</span>
+                </span>
+                <span class="row">
+                  <span class="desc">Netmask</span>
+                  <span class="val">255.255.255.0</span>
+                </span>
+              
+              <span class="row">
+                <span class="desc">MAC Address</span>
+                <span class="val">A8:40:41:15:CC:33</span>
+              </span>
+              <span class="row">
+                <span class="desc">Received</span>
+                <span class="val">38.51 MB</span>
+              </span>
+              <span class="row">
+                <span class="desc">Trasmitted</span>
+                <span class="val">2.32 MB</span>
+              </span>
+            </p>
+          </div>
+          
+          <div class="section">
+            <h3>Interface eth0:9 <span class="connected">connected</span></h3>
+            <table>
+              <tbody><tr></tr>
+            </tbody></table>
+            <p>
+              
+                <span class="row">
+                  <span class="desc">Address</span>
+                  <span class="val">172.31.255.254</span>
+                </span>
+                <span class="row">
+                  <span class="desc">Netmask</span>
+                  <span class="val">255.255.255.252</span>
+                </span>
+              
+              <span class="row">
+                <span class="desc">MAC Address</span>
+                <span class="val">A8:40:41:15:CC:33</span>
+              </span>
+              <span class="row">
+                <span class="desc">Received</span>
+                <span class="val"></span>
+              </span>
+              <span class="row">
+                <span class="desc">Trasmitted</span>
+                <span class="val"></span>
+              </span>
+            </p>
+          </div>
+          
+          <div class="section">
+            <h3>Wired Ethernet (eth1) <span class="disconnected">disconnected</span></h3>
+            <table>
+              <tbody><tr></tr>
+            </tbody></table>
+            <p>
+              
+              <span class="row">
+                <span class="desc">MAC Address</span>
+                <span class="val">A8:40:41:15:CC:32</span>
+              </span>
+              <span class="row">
+                <span class="desc">Received</span>
+                <span class="val">0.00 B</span>
+              </span>
+              <span class="row">
+                <span class="desc">Trasmitted</span>
+                <span class="val">0.00 B</span>
+              </span>
+            </p>
+          </div>
+          
+        </div>
+      </div>
+    </div>
+
+    
+
+    
+
+    <!--
+    <div class="wrapper divide" id="www">
+      <div id="currsketch">
+        <p>Current sketch: <a href="#">sketch title</a></p>
+        <ul id="wwwlist">
+          <li class="folder"><a href="#">folder1</a></li>
+        </ul>
+      </div>
+      <p>Other www folders: </p>
+      <ul id="wwwotherlist">
+        <li class="folder"><a href="#">folder2</a></li>
+        <li class="folder"><a href="#">folder3</a></li>
+        <li class="folder"><a href="#">folder4</a></li>
+        <li class="folder"><a href="#">folder5</a></li>
+      </ul>
+    </div>
+    -->
+  </div>
+  <!-- #content -->
+  <br class="clear">
+</div>
+<!-- #container -->
+<script type="text/javascript" charset="utf-8" src="0104X4_welcome_files/zepto.js"></script>
+<script type="text/javascript" charset="utf-8" src="0104X4_welcome_files/webpanel.js"></script>
+
+
+</body></html>

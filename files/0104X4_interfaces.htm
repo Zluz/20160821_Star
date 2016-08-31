@@ -1,0 +1,355 @@
+<!DOCTYPE html>
+<html lang="en"><head>
+<meta http-equiv="content-type" content="text/html; charset=UTF-8">
+  <meta charset="utf-8">
+  <title>0104X4 - Interfaces - LuCI</title>
+  <!--[if lt IE 9]><script src="/luci-static/bootstrap/html5.js"></script><![endif]-->
+  <link rel="stylesheet" href="0104X4_interfaces_files/cascade.css">
+  <link rel="shortcut icon" href="http://192.168.1.9/luci-static/bootstrap/favicon.ico">
+  <script src="0104X4_interfaces_files/xhr.js"></script>
+ </head>
+
+ <body class="lang_enInterfaces">
+  <header>
+   <div class="fill">
+    <div class="container">
+     <a class="brand" href="#">0104X4</a>
+     <ul class="nav">
+        <li class="dropdown">
+            <a class="menu" href="http://192.168.1.9/cgi-bin/luci/;stok=cfcb1213850ce78b19747dbe22095e93/admin/status">Status</a>
+	 <ul class="dropdown-menu">
+	  <li><a href="http://192.168.1.9/cgi-bin/luci/;stok=cfcb1213850ce78b19747dbe22095e93/admin/status/overview">Overview</a></li>
+	  <li><a href="http://192.168.1.9/cgi-bin/luci/;stok=cfcb1213850ce78b19747dbe22095e93/admin/status/iptables">Firewall</a></li>
+	  <li><a href="http://192.168.1.9/cgi-bin/luci/;stok=cfcb1213850ce78b19747dbe22095e93/admin/status/routes">Routes</a></li>
+	  <li><a href="http://192.168.1.9/cgi-bin/luci/;stok=cfcb1213850ce78b19747dbe22095e93/admin/status/syslog">System Log</a></li>
+	  <li><a href="http://192.168.1.9/cgi-bin/luci/;stok=cfcb1213850ce78b19747dbe22095e93/admin/status/dmesg">Kernel Log</a></li>
+	  <li><a href="http://192.168.1.9/cgi-bin/luci/;stok=cfcb1213850ce78b19747dbe22095e93/admin/status/processes">Processes</a></li>
+	  <li><a href="http://192.168.1.9/cgi-bin/luci/;stok=cfcb1213850ce78b19747dbe22095e93/admin/status/realtime">Realtime Graphs</a></li>
+	</ul>
+        </li>
+	
+        <li class="dropdown">
+            <a class="menu" href="http://192.168.1.9/cgi-bin/luci/;stok=cfcb1213850ce78b19747dbe22095e93/admin/system">System</a>
+	 <ul class="dropdown-menu">
+	  <li><a href="http://192.168.1.9/cgi-bin/luci/;stok=cfcb1213850ce78b19747dbe22095e93/admin/system/system">System</a></li>
+	  <li><a href="http://192.168.1.9/cgi-bin/luci/;stok=cfcb1213850ce78b19747dbe22095e93/admin/system/admin">Administration</a></li>
+	  <li><a href="http://192.168.1.9/cgi-bin/luci/;stok=cfcb1213850ce78b19747dbe22095e93/admin/system/packages">Software</a></li>
+	  <li><a href="http://192.168.1.9/cgi-bin/luci/;stok=cfcb1213850ce78b19747dbe22095e93/admin/system/startup">Startup</a></li>
+	  <li><a href="http://192.168.1.9/cgi-bin/luci/;stok=cfcb1213850ce78b19747dbe22095e93/admin/system/crontab">Scheduled Tasks</a></li>
+	  <li><a href="http://192.168.1.9/cgi-bin/luci/;stok=cfcb1213850ce78b19747dbe22095e93/admin/system/fstab">Mount Points</a></li>
+	  <li><a href="http://192.168.1.9/cgi-bin/luci/;stok=cfcb1213850ce78b19747dbe22095e93/admin/system/leds">LED Configuration</a></li>
+	  <li><a href="http://192.168.1.9/cgi-bin/luci/;stok=cfcb1213850ce78b19747dbe22095e93/admin/system/flashops">Backup / Flash Firmware</a></li>
+	  <li><a href="http://192.168.1.9/cgi-bin/luci/;stok=cfcb1213850ce78b19747dbe22095e93/admin/system/reboot">Reboot</a></li>
+	</ul>
+        </li>
+	
+        <li class="dropdown">
+            <a class="menu" href="http://192.168.1.9/cgi-bin/luci/;stok=cfcb1213850ce78b19747dbe22095e93/admin/network">Network</a>
+	 <ul class="dropdown-menu">
+	  <li><a href="http://192.168.1.9/cgi-bin/luci/;stok=cfcb1213850ce78b19747dbe22095e93/admin/network/network">Interfaces</a></li>
+	  <li><a href="http://192.168.1.9/cgi-bin/luci/;stok=cfcb1213850ce78b19747dbe22095e93/admin/network/wireless">Wifi</a></li>
+	  <li><a href="http://192.168.1.9/cgi-bin/luci/;stok=cfcb1213850ce78b19747dbe22095e93/admin/network/dhcp">DHCP and DNS</a></li>
+	  <li><a href="http://192.168.1.9/cgi-bin/luci/;stok=cfcb1213850ce78b19747dbe22095e93/admin/network/hosts">Hostnames</a></li>
+	  <li><a href="http://192.168.1.9/cgi-bin/luci/;stok=cfcb1213850ce78b19747dbe22095e93/admin/network/routes">Static Routes</a></li>
+	  <li><a href="http://192.168.1.9/cgi-bin/luci/;stok=cfcb1213850ce78b19747dbe22095e93/admin/network/firewall">Firewall</a></li>
+	  <li><a href="http://192.168.1.9/cgi-bin/luci/;stok=cfcb1213850ce78b19747dbe22095e93/admin/network/diagnostics">Diagnostics</a></li>
+	</ul>
+        </li>
+	
+         <li>
+	        <a href="http://192.168.1.9/cgi-bin/luci/;stok=cfcb1213850ce78b19747dbe22095e93/admin/logout">Logout</a>
+        </li> 
+    
+	</ul>
+
+	
+	<div class="pull-right">
+	
+      <span id="xhr_poll_status" style="" onclick="XHR.running() ? XHR.halt() : XHR.run()">
+       <span class="label success" id="xhr_poll_status_on">Auto Refresh on</span>
+       <span class="label" id="xhr_poll_status_off" style="display:none">Auto Refresh off</span>
+      </span>
+     </div>
+	
+    </div>
+   </div>
+  </header><div id="maincontent" class="container">
+
+
+
+<form method="post" name="cbi" action="/cgi-bin/luci/;stok=cfcb1213850ce78b19747dbe22095e93/admin/network" enctype="multipart/form-data" onreset="return cbi_validate_reset(this)" onsubmit="return cbi_validate_form(this, 'Some fields are invalid, cannot save values!')">
+	<div>
+		<script type="text/javascript" src="0104X4_interfaces_files/cbi.js"></script>
+		<input name="cbi.submit" value="1" type="hidden">
+		<input value="Save" class="hidden" type="submit">
+	</div>
+<div class="cbi-map" id="cbi-network">
+	<h2><a id="content" name="content">Interfaces</a></h2>
+	<script type="text/javascript" src="0104X4_interfaces_files/cbi.js"></script>
+<script type="text/javascript">//<![CDATA[
+	function iface_shutdown(id, reconnect) {
+		if (!reconnect && !confirm(String.format('Really shutdown interface "%s" ?\nYou might lose access to this device if you are connected via this interface.', id)))
+			return;
+
+		var d = document.getElementById(id + '-ifc-description');
+		if (d)
+			d.innerHTML = reconnect
+				? '<em>Interface is reconnecting...</em>'
+				: '<em>Interface is shutting down...</em>';
+
+		var s = document.getElementById('ifc-rc-status');
+		if (s)
+		{
+			s.parentNode.style.display = 'block';
+			s.innerHTML = 'Waiting for changes to be applied...';
+		}
+
+		XHR.get('/cgi-bin/luci/;stok=cfcb1213850ce78b19747dbe22095e93/admin/network/iface_' + (reconnect ? 'reconnect' : 'shutdown') + '/' + id, null,
+			function(x)
+			{
+				if (s)
+				{
+					s.innerHTML = reconnect
+						? 'Interface reconnected'
+						: 'Interface shut down';
+
+					window.setTimeout(function() {
+						s.parentNode.style.display = 'none';
+					}, 1000);
+				}
+			}
+		);
+	}
+
+
+	var iwxhr = new XHR();
+	var wifidevs = null;
+	var arptable = null;
+
+	XHR.poll(5, '/cgi-bin/luci/;stok=cfcb1213850ce78b19747dbe22095e93/admin/network/iface_status/lan,wan,wan1', null,
+		function(x, ifcs)
+		{
+			if (ifcs)
+			{
+				for (var idx = 0; idx < ifcs.length; idx++)
+				{
+					var ifc = ifcs[idx];
+					var html = '';
+
+					var s = document.getElementById(ifc.id + '-ifc-devices');
+					if (s)
+					{
+						var stat = String.format(
+							'<img src="/luci-static/resources/icons/%s%s.png" style="width:16px; height:16px; vertical-align:middle" />',
+								ifc.type,
+								ifc.is_up ? '' : '_disabled'
+						);
+
+						if (ifc.subdevices && ifc.subdevices.length)
+						{
+							stat += ' <strong>(';
+
+							for (var j = 0; j < ifc.subdevices.length; j++)
+							{
+								var sif = ifc.subdevices[j];
+
+								stat += String.format(
+									'<img src="/luci-static/resources/icons/%s%s.png" style="width:16px; height:16px; vertical-align:middle" title="%h" />',
+										sif.type,
+										sif.is_up ? '' : '_disabled',
+										sif.name
+								);
+							}
+
+							stat += ')</strong>';
+						}
+
+						stat += String.format(
+							'<br /><small>%h</small>',
+								ifc.name
+						);
+
+						s.innerHTML = stat;
+					}
+
+					var d = document.getElementById(ifc.id + '-ifc-description');
+					if (d && ifc.proto && ifc.ifname)
+					{
+						if (ifc.is_up)
+						{
+							html += String.format('<strong>Uptime:</strong> %t<br />', ifc.uptime);
+						}
+
+						if (ifc.type != 'tunnel')
+						{
+							html += String.format('<strong>MAC-Address:</strong> %s<br />', ifc.macaddr);
+						}
+
+						html += String.format(
+							'<strong>RX</strong>: %.2mB (%d Pkts.)<br />' +
+							'<strong>TX</strong>: %.2mB (%d Pkts.)<br />',
+								ifc.rx_bytes, ifc.rx_packets,
+								ifc.tx_bytes, ifc.tx_packets
+						);
+
+						if (ifc.ipaddrs && ifc.ipaddrs.length)
+						{
+							html += '<strong>IPv4: </strong>';
+
+							for (var i = 0; i < ifc.ipaddrs.length; i++)
+								html += String.format(
+									'%s%s/%d',
+									i ? ', ' : '',
+									ifc.ipaddrs[i].addr,
+									ifc.ipaddrs[i].prefix
+								);
+
+							html += '<br />';
+						}
+
+						if (ifc.ip6addrs && ifc.ip6addrs.length)
+						{
+							html += '<strong>IPv6: </strong>';
+
+							for (var i = 0; i < ifc.ip6addrs.length; i++)
+								html += String.format(
+									'%s%s/%d',
+									i ? ', ' : '',
+									ifc.ip6addrs[i].addr.toUpperCase(),
+									ifc.ip6addrs[i].prefix
+								);
+
+							html += '<br />';
+						}
+
+						d.innerHTML = html;
+					}
+					else if (d && !ifc.proto)
+					{
+						var e = document.getElementById(ifc.id + '-ifc-edit');
+						if (e)
+							e.disabled = true;
+
+						d.innerHTML = String.format(
+							'<em>Unsupported protocol type.</em><br />' +
+							'<a href="%h">Install protocol extensions...</a>',
+								'/cgi-bin/luci/;stok=cfcb1213850ce78b19747dbe22095e93/admin/system/packages?query=luci-proto&display=available'
+						);
+					}
+					else if (d && !ifc.ifname)
+					{
+						d.innerHTML = String.format(
+							'<em>Network without interfaces.</em><br />' +
+							'<a href="/cgi-bin/luci/;stok=cfcb1213850ce78b19747dbe22095e93/admin/network/network/%s?tab.network.%s=physical">Assign interfaces...</a>',
+								ifc.name, ifc.name
+						);
+					}
+					else if (d)
+					{
+						d.innerHTML = '<em>Interface not present or not connected yet.</em>';
+					}
+				}
+			}
+		}
+	);
+//]]></script>
+
+<fieldset class="cbi-section" style="display:none">
+	<legend>Reconnecting interface</legend>
+	<img src="0104X4_interfaces_files/loading.gif" alt="Loading" style="vertical-align:middle">
+	<span id="ifc-rc-status">Waiting for changes to be applied...</span>
+</fieldset>
+
+<div class="cbi-map">
+	<fieldset class="cbi-section">
+		<legend>Interface Overview</legend>
+
+		<table class="cbi-section-table" style="margin:10px; empty-cells:hide">
+			<tbody><tr class="cbi-section-table-titles">
+				<th class="cbi-section-table-cell">Network</th>
+				<th class="cbi-section-table-cell" style="text-align:left">Status</th>
+				<th class="cbi-section-table-cell">Actions</th>
+			</tr>
+			
+				<tr class="cbi-section-table-row cbi-rowstyle-2">
+					<td class="cbi-value-field" style="padding:3px">
+						<div class="ifacebox">
+							<div class="ifacebox-head" style="background-color:#90f090" title="Part of zone &quot;lan&quot;">
+								<strong>LAN</strong>
+							</div>
+							<div class="ifacebox-body" id="lan-ifc-devices"><img src="0104X4_interfaces_files/wifi.png" style="width:16px; height:16px; vertical-align:middle"><br><small>Client "Hazysky4"</small></div>
+						</div>
+					</td>
+					<td class="cbi-value-field" style="vertical-align:middle; text-align:left; padding:3px" id="lan-ifc-description"><strong>Uptime:</strong> 5h 32m 16s<br><strong>MAC-Address:</strong> A8:40:41:15:CC:30<br><strong>RX</strong>: 3.66 MB (20052 Pkts.)<br><strong>TX</strong>: 57.05 KB (604 Pkts.)<br><strong>IPv4: </strong>192.168.2.23/24<br></td>
+					<td style="width:420px">
+						<input class="cbi-button cbi-button-reload" style="width:100px" onclick="iface_shutdown('lan', true)" title="Reconnect this interface" value="Connect" type="button">
+						<input class="cbi-button cbi-button-reset" style="width:100px" onclick="iface_shutdown('lan', false)" title="Shutdown this interface" value="Stop" type="button">
+						<input class="cbi-button cbi-button-edit" style="width:100px" onclick="location.href='/cgi-bin/luci/;stok=cfcb1213850ce78b19747dbe22095e93/admin/network/network/lan'" title="Edit this interface" value="Edit" id="lan-ifc-edit" type="button">
+						<input class="cbi-button cbi-button-remove" style="width:100px" onclick="if (confirm('Really delete this interface? The deletion cannot be undone!\nYou might lose access to this device if you are connected via this interface.')) location.href='/cgi-bin/luci/;stok=cfcb1213850ce78b19747dbe22095e93/admin/network/iface_delete/lan'" title="Delete this interface" value="Delete" type="button">
+					</td>
+				</tr>
+			
+				<tr class="cbi-section-table-row cbi-rowstyle-1">
+					<td class="cbi-value-field" style="padding:3px">
+						<div class="ifacebox">
+							<div class="ifacebox-head" style="background-color:#f09090" title="Part of zone &quot;wan&quot;">
+								<strong>WAN</strong>
+							</div>
+							<div class="ifacebox-body" id="wan-ifc-devices"><img src="0104X4_interfaces_files/ethernet.png" style="width:16px; height:16px; vertical-align:middle"><br><small>eth0</small></div>
+						</div>
+					</td>
+					<td class="cbi-value-field" style="vertical-align:middle; text-align:left; padding:3px" id="wan-ifc-description"><strong>Uptime:</strong> 5h 32m 8s<br><strong>MAC-Address:</strong> A8:40:41:15:CC:33<br><strong>RX</strong>: 101.88 MB (1097300 Pkts.)<br><strong>TX</strong>: 8.91 MB (24533 Pkts.)<br><strong>IPv4: </strong>192.168.1.9/24, 172.31.255.254/30<br></td>
+					<td style="width:420px">
+						<input class="cbi-button cbi-button-reload" style="width:100px" onclick="iface_shutdown('wan', true)" title="Reconnect this interface" value="Connect" type="button">
+						<input class="cbi-button cbi-button-reset" style="width:100px" onclick="iface_shutdown('wan', false)" title="Shutdown this interface" value="Stop" type="button">
+						<input class="cbi-button cbi-button-edit" style="width:100px" onclick="location.href='/cgi-bin/luci/;stok=cfcb1213850ce78b19747dbe22095e93/admin/network/network/wan'" title="Edit this interface" value="Edit" id="wan-ifc-edit" type="button">
+						<input class="cbi-button cbi-button-remove" style="width:100px" onclick="if (confirm('Really delete this interface? The deletion cannot be undone!\nYou might lose access to this device if you are connected via this interface.')) location.href='/cgi-bin/luci/;stok=cfcb1213850ce78b19747dbe22095e93/admin/network/iface_delete/wan'" title="Delete this interface" value="Delete" type="button">
+					</td>
+				</tr>
+			
+				<tr class="cbi-section-table-row cbi-rowstyle-2">
+					<td class="cbi-value-field" style="padding:3px">
+						<div class="ifacebox">
+							<div class="ifacebox-head" style="background-color:#acabf4" title="Part of zone &quot;wan1&quot;">
+								<strong>WAN1</strong>
+							</div>
+							<div class="ifacebox-body" id="wan1-ifc-devices"><img src="0104X4_interfaces_files/ethernet.png" style="width:16px; height:16px; vertical-align:middle"><br><small>eth1</small></div>
+						</div>
+					</td>
+					<td class="cbi-value-field" style="vertical-align:middle; text-align:left; padding:3px" id="wan1-ifc-description"><strong>Uptime:</strong> 0h 0m 0s<br><strong>MAC-Address:</strong> A8:40:41:15:CC:32<br><strong>RX</strong>: 0.00 B (0 Pkts.)<br><strong>TX</strong>: 0.00 B (0 Pkts.)<br></td>
+					<td style="width:420px">
+						<input class="cbi-button cbi-button-reload" style="width:100px" onclick="iface_shutdown('wan1', true)" title="Reconnect this interface" value="Connect" type="button">
+						<input class="cbi-button cbi-button-reset" style="width:100px" onclick="iface_shutdown('wan1', false)" title="Shutdown this interface" value="Stop" type="button">
+						<input class="cbi-button cbi-button-edit" style="width:100px" onclick="location.href='/cgi-bin/luci/;stok=cfcb1213850ce78b19747dbe22095e93/admin/network/network/wan1'" title="Edit this interface" value="Edit" id="wan1-ifc-edit" type="button">
+						<input class="cbi-button cbi-button-remove" style="width:100px" onclick="if (confirm('Really delete this interface? The deletion cannot be undone!\nYou might lose access to this device if you are connected via this interface.')) location.href='/cgi-bin/luci/;stok=cfcb1213850ce78b19747dbe22095e93/admin/network/iface_delete/wan1'" title="Delete this interface" value="Delete" type="button">
+					</td>
+				</tr>
+			
+		</tbody></table>
+
+		<input class="cbi-button cbi-button-add" value="Add new interface..." onclick="location.href='/cgi-bin/luci/;stok=cfcb1213850ce78b19747dbe22095e93/admin/network/iface_add'" type="button">
+	</fieldset>
+</div>
+
+	<br>
+</div></form>
+
+   <footer><a href="http://luci.subsignal.org/">Powered by LuCI 0.11.1 Release (0.11.1)</a>
+
+    
+     <ul class="breadcrumb pull-right" id="modemenu">
+	    
+		    <li class="active"><a href="http://192.168.1.9/cgi-bin/luci/;stok=cfcb1213850ce78b19747dbe22095e93/admin/">Administration</a> <span class="divider">|</span></li>
+	    
+		    <li><a href="http://192.168.1.9/cgi-bin/luci/;stok=cfcb1213850ce78b19747dbe22095e93/webpanel/">Iduino Web Panel</a> <span class="divider">|</span></li>
+	    
+     </ul>
+    
+   </footer>
+   </div>
+  
+ 
+
+
+
+</body></html>

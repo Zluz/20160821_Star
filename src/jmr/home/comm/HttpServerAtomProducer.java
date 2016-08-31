@@ -38,7 +38,7 @@ public class HttpServerAtomProducer {
 			instance = new HttpServerAtomProducer();
 	private HttpServer server;
 	
-	public final static int PORT_HOSTED = 8000;
+	public final static int PORT_HOSTED = 80;
 	
 	public HttpServerAtomProducer() {}
 	
@@ -86,6 +86,10 @@ public class HttpServerAtomProducer {
 		@Override
 		public void handle( final HttpExchange exchange ) throws IOException {
 
+			System.out.println( "Incoming request: " + exchange );
+			System.out.println( "\tfrom: " + exchange.getRemoteAddress().getAddress() );
+			System.out.println( "\tURI: " + exchange.getRequestURI() );
+			
 			final Atom atom = new Atom(	Atom.Type.EVENT, 
 										HttpServerAtomProducer.class.getSimpleName(), 
 										Long.toString( PORT_HOSTED ) );
