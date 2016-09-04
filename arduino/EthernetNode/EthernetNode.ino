@@ -7,13 +7,22 @@
 #include <SPI.h>
 #include <Ethernet.h>
 #include <EEPROM.h>
+#include <avr/pgmspace.h>
+
+#define DEBUG // set to DEBUG to apply
 
 /* Constants */
 
-const String strVersion = "20160903_001";
+//const String strVersion = "20160903_001";
+const static String strVersion = "20160903_001";
+//const static String strVersion PROGMEM = "20160903_001";
+//const static String strVersion PROGMEM = "20160903_001";
+//const static char strVersion[] PROGMEM = "20160903_001";
+//const static char strVersion[] = F("20160903_001");
 
 byte macPlanet[] = { 0x01, 0x01, 0x01, 0x01, 0x01, 0x01 };
 IPAddress ipPlanet( 192,168,1,3 );
+//byte arrStarIP[] = { 0,0,0,0 };
 
 /* Globals */
 
@@ -45,20 +54,6 @@ String pop( String& strSource,
 }
 
 
-/* figure this out later */
-String printHex(  int num, 
-                  int precision ) {
-  char tmp[16];
-  char format[128];
-  
-//  sprintf(format, "0x%%.%dX", precision);
-//  sprintf(format, "0x%%dX", precision);
-  
-  sprintf(tmp, format, num);
-//     Serial.print(tmp);
-  String strValue = String( tmp );
-  return strValue;
-}
 
 String formatHexDigit( int num ) {
   String strHexValue = String( num, HEX );
@@ -70,6 +65,20 @@ String formatHexDigit( int num ) {
   return strHexValue;
 }
 
+
+//String getStarIPAsString() {
+//  String strIP = "( ";
+//  for ( int i=0; i<4; i++ ) {
+//    if ( i>0 ) strIP = strIP + ",";
+//    strIP = strIP + String( arrStarIP[i] );
+//  }
+//  strIP = strIP + " )";
+//  return strIP;
+//}
+
+
+
+
 long getSystemTime() {
   if ( lTime>0 ) {
     return lTime + millis();
@@ -78,10 +87,13 @@ long getSystemTime() {
   }
 }
 
+
 String getMACAddress() {
+  return F("[getMACAddress() is disabled]");
+  
   const String strSerNo = getSerialNumber();
-  if ( strSerNo.equals( "0105X5" ) ) {
-    byte value[] = { 0xDE, 0xAD, 0xBE, 0xEF, 0xFE, 0xED };
+  if ( strSerNo.equals( F("0105X5") ) ) {
+    const byte value[] PROGMEM = { 0xDE, 0xAD, 0xBE, 0xEF, 0xFE, 0xED };
     for ( int i=0; i<6; i++ ) {
       macPlanet[i] = value[i];
     }
@@ -91,7 +103,8 @@ String getMACAddress() {
   
   String strMAC = "[ ";
   for ( int i=0; i<6; i++ ) {
-    strMAC = strMAC + formatHexDigit( macPlanet[i] ) + " ";
+//    strMAC = strMAC + formatHexDigit( macPlanet[i] ) + " ";
+    strMAC = strMAC + String( macPlanet[i] ) + " ";
   }
   strMAC = strMAC + "]";
 //  String strMAC = String( macPlanet );
@@ -115,6 +128,7 @@ String getVersion() {
 
 String printNameValue(  String strName,
                         String strValue ) {
+//  Serial.println( "--- printNameValue(), \"" + strName + "\" = \"" + strValue + "\"" );
   String strHTML = "<tr><td>"
           + strName + "</td><td><tt>"
           + strValue + "</tt></td></tr>";
@@ -128,6 +142,53 @@ String printSection( String strTitle ) {
 }
 
 
+int freeRam () {
+  extern int __heap_start, *__brkval; 
+  int v; 
+  return (int) &v - (__brkval == 0 ? (int) &__heap_start : (int) __brkval); 
+}
+
+
+
+
+
+String sendAtom() {
+//  if ( 0==strStarHost.length() ) return "strStarHost not set";
+//  if ( 0==arrStarIP[0] ) return "Star host IP not set";
+  
+  EthernetClient client;
+//  int iResult = client.connect( strStarHost, 80 );
+//  int iResult = client.connect( arrStarIP, 80 );
+  int iResult = client.connect( ipPlanet, 80 );
+  
+  if ( iResult < 0 ) {
+    String strResult = "Failed to connect, connect() response: " + String( iResult );
+    return strResult;
+  }
+  
+  client.println( F("GET /atom HTTP/1.1") );
+//  client.println( "Host: 192.168.1.4" );
+//  client.println( "Connection: close" );
+  client.println();
+  
+  String strResponse = "<begin>";
+  while ( client.available() ) {
+    char c = client.read();
+    strResponse = strResponse + c;
+  }
+  strResponse = strResponse + "<end>";
+  
+  client.stop();
+  
+  String strResult = "Atom sent, response: " + strResponse;
+  return strResult;
+}
+
+
+
+
+
+
 void processRequest( EthernetClient client ) {
   if ( !client.connected() ) return;
 
@@ -138,51 +199,123 @@ void processRequest( EthernetClient client ) {
     while ( bRead ) {
 
       if ( client.available() ) {
-        char c = client.read();
-        strRequest = strRequest + c;
+        const int i = client.read();
+        if ( -1==i ) {
+          bRead = false;
+        } else {
+          char c = (char) i;
+          strRequest = strRequest + c;
+        }
       }
       
-      if ( strRequest.indexOf( "HTTP" )>-1 ) {
+      if ( strRequest.indexOf( F("HTTP") )>-1 ) {
         bRead = false;
       }
     }
     
     /* extract info the request */
     
-    String strOriginal = strRequest;
+    const String strOriginal = strRequest;
+    
+    String strTemp;
     
     pop( strRequest, " " );
     strRequest = pop( strRequest, "HTTP" );
     strRequest.trim();
     
-    String strPath = strRequest;
-    strPath = pop( strPath, "?" );
-    strPath.toLowerCase();
+    String strCommand = strRequest + "/";
+    const int iPosQMark = strCommand.indexOf( F("?") );
+    const int iPosSlash = strCommand.indexOf( F("/"), 2 );
+    if ( iPosQMark<0 || iPosQMark>iPosSlash ) {
+      strCommand = strCommand.substring( 0, iPosSlash );
+    } else {
+      strTemp = strCommand;
+      strCommand = pop( strTemp, "?" );
+    }
+    strCommand.toLowerCase();
     
     String strParams = strRequest;
-    pop( strParams, "?" );
-    
+    strParams = strParams.substring( strCommand.length() + 1 );
+
     String strName = strParams;
-    strName = pop( strName, "=" );
+    strTemp = strName;
+    strName = pop( strTemp, F("=") );
     strName.toLowerCase();
     
     String strValue = strParams;
-    pop( strValue, "=" );
+    if ( strValue.indexOf( F("=") )>-1 ) {
+      pop( strValue, "=" );
+    } else {
+      strValue = "";
+    }
     
+    #if defined( DEBUG )
+      Serial.print( F("strRequest = ") );
+      Serial.println( strRequest );
+      Serial.print( F("strCommand = ") );
+      Serial.println( strCommand );
+      Serial.print( F("strParams = ") );
+      Serial.println( strParams );
+      Serial.print( F("strName = ") );
+      Serial.println( strName );
+      Serial.print( F("strValue = ") );
+      Serial.println( strValue );
+    #endif
    
     /* process the changes requested */ 
     
     String strMessage = "(no message)";
     
    
-    if ( strPath.equals( "/set" ) ) {
+    if ( strCommand.equals( F("/set") ) ) {
       
-      if ( strName.equals( "host" ) ) {
+//      Serial.println( "(command is to set)" );
+
+      if ( strName.equals( F("hostname") ) ) {
         
         strStarHost = strValue;
         strMessage = "host set to \"" + strStarHost + "\"";
+
+      } else if ( strName.equals( F("host_ip") ) ) {
+
+//        Serial.println( "(config value is host_ip)" );
         
-      } else if ( strName.equals( "interval" ) ) {
+//        String strIP = strValue;
+//        
+//        Serial.println( "strIP = " + strIP );
+//
+//        String strOct1 = pop( strIP, "," );
+//        strOct1.trim();
+//        int iOct1 = strOct1.toInt();
+//
+//        Serial.println( "strOct1 = " + strOct1 );
+//        
+//        String strOct2 = pop( strIP, "," );
+//        strOct2.trim();
+//        int iOct2 = strOct2.toInt();
+//
+//        Serial.println( "strOct2 = " + strOct2 );
+//        
+//        String strOct3 = pop( strIP, "," );
+//        strOct3.trim();
+//        int iOct3 = strOct3.toInt();
+//
+//        Serial.println( "strOct3 = " + strOct3 );
+//        
+//        String strOct4 = strIP;
+//        strOct4.trim();
+//        int iOct4 = strOct4.toInt();
+//
+//        Serial.println( "strOct4 = " + strOct4 );
+//        
+//        arrStarIP[0] = iOct1;
+//        arrStarIP[1] = iOct2;
+//        arrStarIP[2] = iOct3;
+//        arrStarIP[3] = iOct4;
+
+        strMessage = "Host IP set to " + strValue + ".";
+        
+      } else if ( strName.equals( F("interval") ) ) {
         
         String strInterval = strValue;
         strInterval.trim();
@@ -198,7 +331,7 @@ void processRequest( EthernetClient client ) {
           
         }
         
-      } else if ( strName.equals( "time" ) ) {
+      } else if ( strName.equals( F("time") ) ) {
         
         String strTime = strValue;
         strTime.trim();
@@ -214,34 +347,41 @@ void processRequest( EthernetClient client ) {
           
         }
         
+      } else {
+          strMessage = "Invalid variable: \"" + strName + "\".";
       }
       
-    } else if ( strPath.equals( "/read" ) ) {
+    } else if ( strCommand.equals( F("/read") ) ) {
+
+//      Serial.println( "(command is to read)" );
 
       strMessage = "Read request recognized.";
       
     } else {
+
+//      Serial.println( "(command is unknown)" );
       
-      strMessage = "Unknown command: \"" + strPath + "\", available commands: \"/set\".";
+      strMessage = "Unknown command: \"" + strCommand + "\", available commands: \"/set\".";
       
     }
     
     
     
-    
     /* write the response back to the client */
 
+//    Serial.println( "Sending response back to client.." );
+
     // send a standard http response header
-    client.println("HTTP/1.1 200 OK");
-    client.println("Content-Type: text/html");
-    client.println("Connection: close");  // the connection will be closed after completion of the response
+    client.println( F("HTTP/1.1 200 OK" ) );
+    client.println( F("Content-Type: text/html" ) );
+    client.println( F("Connection: close" ) );  // the connection will be closed after completion of the response
 //    client.println("Refresh: 1");  // refresh the page automatically every 5 sec
     client.println();
-    client.println("<!DOCTYPE HTML>");
-    client.println("<html>");
+    client.println( F("<!DOCTYPE HTML>" ) );
+    client.println( F("<html>" ) );
     
-    client.println( "<font face='verdana'>" );
-    client.println( "<table border='1' cellpadding='4'>" );
+    client.println( F("<font face='verdana'>" ) );
+    client.println( F("<table border='1' cellpadding='4'>" ) );
     
     client.println( printSection( "Configuration" ) );
     client.println( printNameValue( "Serial Number", getSerialNumber() ) );
@@ -252,11 +392,14 @@ void processRequest( EthernetClient client ) {
     client.println( printNameValue( "Internal time", String( getSystemTime() ) ) );
     client.println( printNameValue( "strStarHost", strStarHost ) );
     client.println( printNameValue( "iInterval", String( iInterval ) ) );
+//    client.println( printNameValue( "memory", String( free_ram() ) ) );
+    client.println( printNameValue( "memory", String( freeRam() ) ) );
+
     
     client.println( printSection( "Request Details" ) );
     client.println( printNameValue( "strOriginal", strOriginal ) );
     client.println( printNameValue( "strRequest", strRequest ) );
-    client.println( printNameValue( "strPath", strPath ) );
+    client.println( printNameValue( "strCommand", strCommand ) );
     client.println( printNameValue( "strParams", strParams ) );
     client.println( printNameValue( "strName", strName ) );
     client.println( printNameValue( "strValue", strValue ) );
@@ -267,23 +410,42 @@ void processRequest( EthernetClient client ) {
     
     client.println( printSection( "Data Points" ) );
     // output the value of each analog input pin
+//    for ( int iA = 0; iA < 6; iA++ ) {
+//      int iValue = analogRead( iA );
+//      const String strName = "Analog Input " + String( iA );
+//      const String strLine = printNameValue( strName, String( iValue ) );
+//      client.println( strLine );
+//    }
+//    for ( int iD = 2; iD < 14; iD++ ) {
+//      int iValue = digitalRead( iD );
+//      const String strName = "Digital Input " + String( iD );
+//      const String strLine = printNameValue( strName, String( iValue ) );
+//      client.println( strLine );
+//    }
     for ( int iA = 0; iA < 6; iA++ ) {
       int iValue = analogRead( iA );
-      const String strName = "Analog Input " + String( iA );
-      const String strLine = printNameValue( strName, String( iValue ) );
-      client.println( strLine );
+      client.print( F( "<tr><td>" ) );
+      client.print( F( "Analog Input " ) );
+      client.print( String( iA ) );
+      client.print( F( "</td><td><tt>" ) );
+      client.print( String( iValue ) );
+      client.println( F( "</tt></td></tr>" ) );
     }
     for ( int iD = 2; iD < 14; iD++ ) {
       int iValue = digitalRead( iD );
-      const String strName = "Digital Input " + String( iD );
-      const String strLine = printNameValue( strName, String( iValue ) );
-      client.println( strLine );
+      client.print( F( "<tr><td>" ) );
+      client.print( F( "Digital Input " ) );
+      client.print( String( iD ) );
+      client.print( F( "</td><td><tt>" ) );
+      client.print( String( iValue ) );
+      client.println( F( "</tt></td></tr>" ) );
     }
 
     
-    client.println( "</table></font>" );
+    client.println( F("</table></font>" ) );
     
-  client.println( "</html>" );
+  client.println( F("</html>" ) );
+//  Serial.println( "Response sent completely." );
 }
 
 
@@ -295,7 +457,7 @@ void setup() {
   getMACAddress();
   Ethernet.begin( macPlanet, ipPlanet );
   server.begin();
-  Serial.print("server is ");
+  Serial.print( F("server is ") );
   Serial.println( Ethernet.localIP() );
 }
 
@@ -305,7 +467,7 @@ void loop() {
 
   EthernetClient client = server.available();
   if (client) {
-    Serial.println("new client");
+    Serial.println( F("new client") );
     
     processRequest( client );
     delay(1);
