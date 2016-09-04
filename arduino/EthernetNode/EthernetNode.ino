@@ -22,6 +22,7 @@ const static String strVersion = "20160903_001";
 
 byte macPlanet[] = { 0x01, 0x01, 0x01, 0x01, 0x01, 0x01 };
 IPAddress ipPlanet( 192,168,1,3 );
+IPAddress ipStar( 192,168,1,4 );
 //byte arrStarIP[] = { 0,0,0,0 };
 
 /* Globals */
@@ -126,19 +127,23 @@ String getVersion() {
 }
 
 
-String printNameValue(  String strName,
-                        String strValue ) {
+void printNameValue(  EthernetClient client,
+                      String strName,
+                      String strValue ) {
 //  Serial.println( "--- printNameValue(), \"" + strName + "\" = \"" + strValue + "\"" );
-  String strHTML = "<tr><td>"
-          + strName + "</td><td><tt>"
-          + strValue + "</tt></td></tr>";
-  return strHTML;
+  client.print( F( "<tr><td>" ) );
+  client.print( strName );
+  client.print( F( "</td><td><tt>" ) );
+  client.print( strValue );
+  client.println( F( "</tt></td></tr>" ) );
 }
 
-String printSection( String strTitle ) {
-  String strHTML = "<tr><th colspan='2'>"
-          + strTitle + "</th></tr>";
-  return strHTML;
+
+void printSection( EthernetClient client,
+                   String strTitle ) {
+  client.print( F( "<tr><th colspan='2'>" ) );
+  client.print( strTitle );
+  client.print( F( "</th></tr>" ) );
 }
 
 
@@ -159,11 +164,15 @@ String sendAtom() {
   EthernetClient client;
 //  int iResult = client.connect( strStarHost, 80 );
 //  int iResult = client.connect( arrStarIP, 80 );
-  int iResult = client.connect( ipPlanet, 80 );
+  int iResult = client.connect( ipStar, 80 );
   
   if ( iResult < 0 ) {
     String strResult = "Failed to connect, connect() response: " + String( iResult );
     return strResult;
+  }
+  
+  if ( !client ) {
+    return F( "Client is false." );
   }
   
   client.println( F("GET /atom HTTP/1.1") );
@@ -174,7 +183,7 @@ String sendAtom() {
   String strResponse = "<begin>";
   while ( client.available() ) {
     char c = client.read();
-    strResponse = strResponse + c;
+//    strResponse = strResponse + String( c );
   }
   strResponse = strResponse + "<end>";
   
@@ -264,7 +273,7 @@ void processRequest( EthernetClient client ) {
    
     /* process the changes requested */ 
     
-    String strMessage = "(no message)";
+    String strMessage = F("(no message)");
     
    
     if ( strCommand.equals( F("/set") ) ) {
@@ -351,15 +360,23 @@ void processRequest( EthernetClient client ) {
           strMessage = "Invalid variable: \"" + strName + "\".";
       }
       
+    } else if ( strCommand.equals( F("/send") ) ) {
+
+      Serial.println( F("(request to send atom)") );
+      
+      String strResult = sendAtom();
+
+      strMessage = "Request to send atom, result: " + strResult;
+      
     } else if ( strCommand.equals( F("/read") ) ) {
 
-//      Serial.println( "(command is to read)" );
+      Serial.println( F("(command is to read)") );
 
-      strMessage = "Read request recognized.";
+      strMessage = F("Read request recognized.");
       
     } else {
 
-//      Serial.println( "(command is unknown)" );
+      Serial.println( F("(command is unknown)") );
       
       strMessage = "Unknown command: \"" + strCommand + "\", available commands: \"/set\".";
       
@@ -383,45 +400,34 @@ void processRequest( EthernetClient client ) {
     client.println( F("<font face='verdana'>" ) );
     client.println( F("<table border='1' cellpadding='4'>" ) );
     
-    client.println( printSection( "Configuration" ) );
-    client.println( printNameValue( "Serial Number", getSerialNumber() ) );
-    client.println( printNameValue( "MAC Address", getMACAddress() ) );
+    printSection( client, F("Configuration") );
+    printNameValue( client, F("Serial Number"), getSerialNumber() );
+    printNameValue( client, F("MAC Address"), getMACAddress() );
 //    client.println( printNameValue( "MAC Address", macPlanet ) );
-    client.println( printNameValue( "Sketch Version", getVersion() ) );
-    client.println( printNameValue( "Time since started", String( millis() ) ) );
-    client.println( printNameValue( "Internal time", String( getSystemTime() ) ) );
-    client.println( printNameValue( "strStarHost", strStarHost ) );
-    client.println( printNameValue( "iInterval", String( iInterval ) ) );
+    printNameValue( client, F("Sketch Version"), getVersion() );
+    printNameValue( client, F("Time since started"), String( millis() ) );
+    printNameValue( client, F("Internal time"), String( getSystemTime() ) );
+    printNameValue( client, F("strStarHost"), strStarHost );
+    printNameValue( client, F("iInterval"), String( iInterval ) );
 //    client.println( printNameValue( "memory", String( free_ram() ) ) );
-    client.println( printNameValue( "memory", String( freeRam() ) ) );
+    printNameValue( client, F("memory"), String( freeRam() ) );
 
     
-    client.println( printSection( "Request Details" ) );
-    client.println( printNameValue( "strOriginal", strOriginal ) );
-    client.println( printNameValue( "strRequest", strRequest ) );
-    client.println( printNameValue( "strCommand", strCommand ) );
-    client.println( printNameValue( "strParams", strParams ) );
-    client.println( printNameValue( "strName", strName ) );
-    client.println( printNameValue( "strValue", strValue ) );
+    printSection( client, F("Request Details") );
+    printNameValue( client, F("strOriginal"), strOriginal );
+    printNameValue( client, F("strRequest"), strRequest );
+    printNameValue( client, F("strCommand"), strCommand );
+    printNameValue( client, F("strParams"), strParams );
+    printNameValue( client, F("strName"), strName );
+    printNameValue( client, F("strValue"), strValue );
     
-    client.println( printSection( "Results" ) );
-    client.println( printNameValue( "strMessage", strMessage ) );
+    printSection( client, F("Results") );
+    printNameValue( client, F("strMessage"), strMessage );
     
     
-    client.println( printSection( "Data Points" ) );
+//    client.println( printSection( "Data Points" ) );
+    printSection( client, F("Data Points") );
     // output the value of each analog input pin
-//    for ( int iA = 0; iA < 6; iA++ ) {
-//      int iValue = analogRead( iA );
-//      const String strName = "Analog Input " + String( iA );
-//      const String strLine = printNameValue( strName, String( iValue ) );
-//      client.println( strLine );
-//    }
-//    for ( int iD = 2; iD < 14; iD++ ) {
-//      int iValue = digitalRead( iD );
-//      const String strName = "Digital Input " + String( iD );
-//      const String strLine = printNameValue( strName, String( iValue ) );
-//      client.println( strLine );
-//    }
     for ( int iA = 0; iA < 6; iA++ ) {
       int iValue = analogRead( iA );
       client.print( F( "<tr><td>" ) );
