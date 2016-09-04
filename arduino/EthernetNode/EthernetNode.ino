@@ -22,8 +22,9 @@ const static String strVersion = "20160903_001";
 
 byte macPlanet[] = { 0x01, 0x01, 0x01, 0x01, 0x01, 0x01 };
 IPAddress ipPlanet( 192,168,1,3 );
-IPAddress ipStar( 192,168,1,4 );
-//byte arrStarIP[] = { 0,0,0,0 };
+//IPAddress ipStar( 192,168,1,4 );
+IPAddress ipStar( 0,0,0,0 );
+byte arrStarIP[] = { 0,0,0,0 };
 
 /* Globals */
 
@@ -31,6 +32,7 @@ char sIDRead[7];
 
 String strStarHost;
 int iInterval;
+long lNextSend;
 
 EthernetServer server(80);
 
@@ -56,26 +58,31 @@ String pop( String& strSource,
 
 
 
-String formatHexDigit( int num ) {
-  String strHexValue = String( num, HEX );
+void formatHexDigit( EthernetClient client,
+                     int num ) {
+  client.print( F("0x") );
   if ( num < 11 ) {
-    strHexValue = "0" + strHexValue;
+    client.print( F("0") );
   }
+  
+  String strHexValue = String( num, HEX );
   strHexValue.toUpperCase();
-  strHexValue = "0x" + strHexValue;
-  return strHexValue;
+  client.print( strHexValue );
 }
 
 
-//String getStarIPAsString() {
-//  String strIP = "( ";
-//  for ( int i=0; i<4; i++ ) {
-//    if ( i>0 ) strIP = strIP + ",";
-//    strIP = strIP + String( arrStarIP[i] );
-//  }
-//  strIP = strIP + " )";
-//  return strIP;
-//}
+void printStarIP( EthernetClient client ) {
+//  client.print( F( "(printStarIP() disabled)" ) ); return;
+  
+  client.print( F("( ") );
+  for ( int i=0; i<4; i++ ) {
+    if ( i>0 ) {
+      client.print( F(".") );
+    }
+    client.print( String( arrStarIP[i] ) );
+  }
+  client.print( F(" )") );
+}
 
 
 
@@ -89,9 +96,7 @@ long getSystemTime() {
 }
 
 
-String getMACAddress() {
-  return F("[getMACAddress() is disabled]");
-  
+void resolveMACAddress() {
   const String strSerNo = getSerialNumber();
   if ( strSerNo.equals( F("0105X5") ) ) {
     const byte value[] PROGMEM = { 0xDE, 0xAD, 0xBE, 0xEF, 0xFE, 0xED };
@@ -101,15 +106,18 @@ String getMACAddress() {
   } else {
 //    macPlanet = { 0x01, 0x01, 0x01, 0x01, 0x01, 0x01 };
   }
+}
   
-  String strMAC = "[ ";
+
+void printMACAddress( EthernetClient client ) {
+//  client.print( F("[getMACAddress() is disabled]") ); return;
+  
+  client.print( F("[ ") );
   for ( int i=0; i<6; i++ ) {
-//    strMAC = strMAC + formatHexDigit( macPlanet[i] ) + " ";
-    strMAC = strMAC + String( macPlanet[i] ) + " ";
+    formatHexDigit( client, macPlanet[i] );
+    client.print( F(" ") );
   }
-  strMAC = strMAC + "]";
-//  String strMAC = String( macPlanet );
-  return strMAC;
+  client.print( F("]") );
 }
 
 
@@ -147,7 +155,7 @@ void printSection( EthernetClient client,
 }
 
 
-int freeRam () {
+int freeRam() {
   extern int __heap_start, *__brkval; 
   int v; 
   return (int) &v - (__brkval == 0 ? (int) &__heap_start : (int) __brkval); 
@@ -164,6 +172,7 @@ String sendAtom() {
   EthernetClient client;
 //  int iResult = client.connect( strStarHost, 80 );
 //  int iResult = client.connect( arrStarIP, 80 );
+
   int iResult = client.connect( ipStar, 80 );
   
   if ( iResult < 0 ) {
@@ -175,17 +184,49 @@ String sendAtom() {
     return F( "Client is false." );
   }
   
-  client.println( F("GET /atom HTTP/1.1") );
-//  client.println( "Host: 192.168.1.4" );
-//  client.println( "Connection: close" );
-  client.println();
-  
-  String strResponse = "<begin>";
-  while ( client.available() ) {
-    char c = client.read();
-//    strResponse = strResponse + String( c );
+  client.print( F("GET /atom?") );
+  for ( int iA = 0; iA < 6; iA++ ) {
+    int iValue = analogRead( iA );
+    client.print( F( "A" ) );
+    client.print( String( iA ) );
+    client.print( F( "=" ) );
+    client.print( String( iValue ) );
+    client.print( F( "&" ) );
   }
-  strResponse = strResponse + "<end>";
+  for ( int iD = 2; iD < 14; iD++ ) {
+    int iValue = digitalRead( iD );
+    client.print( F( "D" ) );
+    client.print( String( iD ) );
+    client.print( F( "=" ) );
+    client.print( String( iValue ) );
+    client.print( F( "&" ) );
+  }
+  client.print( F( "SerNo=" ) );
+  client.print( getSerialNumber() );
+  client.print( F( "&Ver=" ) );
+  client.print( strVersion );
+  client.print( F( "&Mem=" ) );
+  client.print( String( freeRam() ) );
+  
+  
+  client.println( F(" HTTP/1.1") );
+//  client.println( "Host: 192.168.1.4" );
+  client.println( F("Connection: close") );
+  client.println();
+
+  String strResponse = "[begin]";
+  boolean bRead = client.available();
+//  boolean bRead = true;
+  while ( bRead ) {
+    const int i = client.read();
+    if ( i>0 ) {
+      const char c = (char) i;
+      strResponse = strResponse + String( c );
+    } else {
+      bRead = false;
+    }
+  }
+  strResponse = strResponse + "[end]";
   
   client.stop();
   
@@ -289,51 +330,63 @@ void processRequest( EthernetClient client ) {
 
 //        Serial.println( "(config value is host_ip)" );
         
-//        String strIP = strValue;
-//        
+        String strIP = strValue + ".";
+        
 //        Serial.println( "strIP = " + strIP );
-//
-//        String strOct1 = pop( strIP, "," );
-//        strOct1.trim();
-//        int iOct1 = strOct1.toInt();
-//
-//        Serial.println( "strOct1 = " + strOct1 );
-//        
-//        String strOct2 = pop( strIP, "," );
-//        strOct2.trim();
-//        int iOct2 = strOct2.toInt();
-//
-//        Serial.println( "strOct2 = " + strOct2 );
-//        
-//        String strOct3 = pop( strIP, "," );
-//        strOct3.trim();
-//        int iOct3 = strOct3.toInt();
-//
-//        Serial.println( "strOct3 = " + strOct3 );
-//        
-//        String strOct4 = strIP;
-//        strOct4.trim();
-//        int iOct4 = strOct4.toInt();
-//
-//        Serial.println( "strOct4 = " + strOct4 );
-//        
-//        arrStarIP[0] = iOct1;
-//        arrStarIP[1] = iOct2;
-//        arrStarIP[2] = iOct3;
-//        arrStarIP[3] = iOct4;
+        Serial.println( F("strIP = ") );
+        Serial.println( strIP );
 
-        strMessage = "Host IP set to " + strValue + ".";
+        String strOct1 = pop( strIP, "." );
+        strOct1.trim();
+        Serial.print( F("strOct1 = ") );
+        Serial.println( strOct1 );
+        const int iOct1 = strOct1.toInt();
+        
+        String strOct2 = pop( strIP, "." );
+        strOct2.trim();
+        Serial.print( F("strOct2 = ") );
+        Serial.println( strOct2 );
+        const int iOct2 = strOct2.toInt();
+        
+        String strOct3 = pop( strIP, "." );
+        strOct3.trim();
+        Serial.print( F("strOct3 = ") );
+        Serial.println( strOct3 );
+        const int iOct3 = strOct3.toInt();
+        
+        String strOct4 = pop( strIP, "." );
+        strOct4.trim();
+        Serial.print( F("strOct4 = ") );
+        Serial.println( strOct4 );
+        const int iOct4 = strOct4.toInt();
+        
+        arrStarIP[0] = iOct1;
+        arrStarIP[1] = iOct2;
+        arrStarIP[2] = iOct3;
+        arrStarIP[3] = iOct4;
+
+        ipStar = IPAddress( arrStarIP[0], arrStarIP[1], arrStarIP[2], arrStarIP[3] );
+
+        strMessage = "Host IP set to " + strValue;
         
       } else if ( strName.equals( F("interval") ) ) {
         
         String strInterval = strValue;
         strInterval.trim();
         int iValue = strInterval.toInt();
-        if ( iValue>0 ) {
+        
+        if ( strInterval.equals("0") ) {
           
+          iInterval = 0;
+          scheduleSend( 0 );
+          strMessage = "Schedule send disabled.";
+          
+        } else if ( iValue>0 ) {
+  
           iInterval = iValue;
+          scheduleSend( getSystemTime() );
           strMessage = "interval set to " + String( iValue ) + ".";
-          
+
         } else {
           
           strMessage = "Invalid interval value: \"" + strValue + "\".";
@@ -347,8 +400,11 @@ void processRequest( EthernetClient client ) {
         long lValue = strTime.toInt();
         if ( lValue>0 ) {
           
-          lTime = lValue;
-          strMessage = "time set to " + String( lValue ) + ".";
+          const long lRunningTime = millis();
+          lTime = lValue - lRunningTime;
+          strMessage = "Time offset set to " + String( lTime ) + ".";
+
+          scheduleSend( getSystemTime() );
           
         } else {
           
@@ -402,12 +458,28 @@ void processRequest( EthernetClient client ) {
     
     printSection( client, F("Configuration") );
     printNameValue( client, F("Serial Number"), getSerialNumber() );
-    printNameValue( client, F("MAC Address"), getMACAddress() );
+    
+//    printNameValue( client, F("MAC Address"), getMACAddress() );
+    // print mac address
+    client.print( F( "<tr><td>" ) );
+    client.print( F("MAC Address") );
+    client.print( F( "</td><td><tt>" ) );
+    printMACAddress( client );
+    client.print( F( "</tt></td></tr>" ) );    
+    
 //    client.println( printNameValue( "MAC Address", macPlanet ) );
     printNameValue( client, F("Sketch Version"), getVersion() );
-    printNameValue( client, F("Time since started"), String( millis() ) );
-    printNameValue( client, F("Internal time"), String( getSystemTime() ) );
+    printNameValue( client, F("Running time"), String( millis() ) );
+    printNameValue( client, F("System time"), String( getSystemTime() ) );
+    printNameValue( client, F("Scheduled send"), String( lNextSend ) );
     printNameValue( client, F("strStarHost"), strStarHost );
+    // print star host IP
+    client.print( F( "<tr><td>" ) );
+    client.print( F("Star Host IP") );
+    client.print( F( "</td><td>" ) );
+    printStarIP( client );
+    client.print( F( "</td></tr>" ) );    
+
     printNameValue( client, F("iInterval"), String( iInterval ) );
 //    client.println( printNameValue( "memory", String( free_ram() ) ) );
     printNameValue( client, F("memory"), String( freeRam() ) );
@@ -422,8 +494,12 @@ void processRequest( EthernetClient client ) {
     printNameValue( client, F("strValue"), strValue );
     
     printSection( client, F("Results") );
-    printNameValue( client, F("strMessage"), strMessage );
-    
+//    printNameValue( client, F("strMessage"), strMessage );
+    client.print( F( "<tr><td>" ) );
+    client.print( F("strMessage") );
+    client.println( F( "</td><td><pre>" ) );
+    client.println( strMessage );
+    client.println( F( "</pre>\n</td></tr>" ) );    
     
 //    client.println( printSection( "Data Points" ) );
     printSection( client, F("Data Points") );
@@ -455,12 +531,16 @@ void processRequest( EthernetClient client ) {
 }
 
 
+void scheduleSend( long lTimeReference ) {
+  lNextSend = lTimeReference + iInterval;
+}
+
 
 void setup() {
   // put your setup code here, to run once:
   Serial.begin(9600);
 
-  getMACAddress();
+  resolveMACAddress();
   Ethernet.begin( macPlanet, ipPlanet );
   server.begin();
   Serial.print( F("server is ") );
@@ -480,5 +560,11 @@ void loop() {
     client.stop();
   }
 
+
+  const long lTimeNow = getSystemTime();
+  if ( (lTimeNow>0) && (lNextSend>0) && (lTimeNow>lNextSend) ) {
+    sendAtom();
+    scheduleSend( lTimeNow );
+  }
 
 }
