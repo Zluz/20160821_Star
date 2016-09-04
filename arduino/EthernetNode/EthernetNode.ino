@@ -1,5 +1,10 @@
 /****************************************
-  EthernetNode_002
+  EthernetNode
+
+Compiled for UNOs
+Sketch uses 25,486 bytes (79%) of program storage space. Maximum is 32,256 bytes.
+Global variables use 787 bytes (38%) of dynamic memory, leaving 1,261 bytes for local variables. Maximum is 2,048 bytes.  
+
  ****************************************/
 
 
@@ -22,9 +27,11 @@ const static String strVersion = "20160903_001";
 
 byte macPlanet[] = { 0x01, 0x01, 0x01, 0x01, 0x01, 0x01 };
 IPAddress ipPlanet( 192,168,1,3 );
-//IPAddress ipStar( 192,168,1,4 );
 IPAddress ipStar( 0,0,0,0 );
 byte arrStarIP[] = { 0,0,0,0 };
+byte byteFailedAttempts = 0;
+long lSuccessAttempts = 0;
+long lLastSendTime = 0;
 
 /* Globals */
 
@@ -64,7 +71,6 @@ void formatHexDigit( EthernetClient client,
   if ( num < 11 ) {
     client.print( F("0") );
   }
-  
   String strHexValue = String( num, HEX );
   strHexValue.toUpperCase();
   client.print( strHexValue );
@@ -72,8 +78,6 @@ void formatHexDigit( EthernetClient client,
 
 
 void printStarIP( EthernetClient client ) {
-//  client.print( F( "(printStarIP() disabled)" ) ); return;
-  
   client.print( F("( ") );
   for ( int i=0; i<4; i++ ) {
     if ( i>0 ) {
@@ -110,8 +114,6 @@ void resolveMACAddress() {
   
 
 void printMACAddress( EthernetClient client ) {
-//  client.print( F("[getMACAddress() is disabled]") ); return;
-  
   client.print( F("[ ") );
   for ( int i=0; i<6; i++ ) {
     formatHexDigit( client, macPlanet[i] );
@@ -136,11 +138,23 @@ String getVersion() {
 
 
 void printNameValue(  EthernetClient client,
-                      String strName,
-                      String strValue ) {
-//  Serial.println( "--- printNameValue(), \"" + strName + "\" = \"" + strValue + "\"" );
+                      const String strName,
+                      const String strValue ) {
+  client.print( F( "<tr><td colspan='2'>" ) );
+  client.print( strName );
+  client.print( F( "</td><td><tt>" ) );
+  client.print( strValue );
+  client.println( F( "</tt></td></tr>" ) );
+}
+
+void printNameValue(  EthernetClient client,
+                      const String strName,
+                      const String strKeyword,
+                      const String strValue ) {
   client.print( F( "<tr><td>" ) );
   client.print( strName );
+  client.print( F( "</td><td><tt>" ) );
+  client.print( strKeyword );
   client.print( F( "</td><td><tt>" ) );
   client.print( strValue );
   client.println( F( "</tt></td></tr>" ) );
@@ -148,8 +162,8 @@ void printNameValue(  EthernetClient client,
 
 
 void printSection( EthernetClient client,
-                   String strTitle ) {
-  client.print( F( "<tr><th colspan='2'>" ) );
+                   const String strTitle ) {
+  client.print( F( "<tr><th colspan='3'>" ) );
   client.print( strTitle );
   client.print( F( "</th></tr>" ) );
 }
@@ -166,23 +180,46 @@ int freeRam() {
 
 
 String sendAtom() {
-//  if ( 0==strStarHost.length() ) return "strStarHost not set";
-//  if ( 0==arrStarIP[0] ) return "Star host IP not set";
+  if ( 0==arrStarIP[0] ) {
+    lNextSend = 0;
+    iInterval = 0;
+
+    return F("Star host IP not set");
+  }
   
+  Serial.println( F("--> sendAtom()") );
+  
+  // HTTP client to star host
   EthernetClient client;
-//  int iResult = client.connect( strStarHost, 80 );
-//  int iResult = client.connect( arrStarIP, 80 );
+
+  Serial.println( F("    sendAtom() - connect()") );
 
   int iResult = client.connect( ipStar, 80 );
   
   if ( iResult < 0 ) {
     String strResult = "Failed to connect, connect() response: " + String( iResult );
+    Serial.println( F("<-- sendAtom(); iResult < 0") );
     return strResult;
   }
   
+  Serial.println( F("    sendAtom() - testing client") );
+
   if ( !client ) {
+    byteFailedAttempts = byteFailedAttempts + 1;
+    
+    if ( byteFailedAttempts > 1 ) {
+      lNextSend = 0;
+      iInterval = 0;
+    }
+    
+    Serial.print( F("<-- sendAtom(); !client, byteFailedAttempts = ") );
+    Serial.println( byteFailedAttempts );
     return F( "Client is false." );
   }
+
+  Serial.println( F("    sendAtom() - print()") );
+  
+  lLastSendTime = getSystemTime();
   
   client.print( F("GET /atom?") );
   for ( int iA = 0; iA < 6; iA++ ) {
@@ -230,7 +267,13 @@ String sendAtom() {
   
   client.stop();
   
+  byteFailedAttempts = 0;
+  lSuccessAttempts = lSuccessAttempts + 1;
+  
   String strResult = "Atom sent, response: " + strResponse;
+  Serial.println( F("<-- sendAtom(), normal") );
+//  Serial.print( F("    sendAtom(), response = ") );
+//  Serial.println( strResponse );
   return strResult;
 }
 
@@ -375,7 +418,7 @@ void processRequest( EthernetClient client ) {
         strInterval.trim();
         int iValue = strInterval.toInt();
         
-        if ( strInterval.equals("0") ) {
+        if ( strInterval.equals( F("0") ) ) {
           
           iInterval = 0;
           scheduleSend( 0 );
@@ -461,28 +504,35 @@ void processRequest( EthernetClient client ) {
     
 //    printNameValue( client, F("MAC Address"), getMACAddress() );
     // print mac address
-    client.print( F( "<tr><td>" ) );
+    client.print( F( "<tr><td colspan='2'>" ) );
     client.print( F("MAC Address") );
     client.print( F( "</td><td><tt>" ) );
     printMACAddress( client );
     client.print( F( "</tt></td></tr>" ) );    
-    
+
 //    client.println( printNameValue( "MAC Address", macPlanet ) );
     printNameValue( client, F("Sketch Version"), getVersion() );
-    printNameValue( client, F("Running time"), String( millis() ) );
-    printNameValue( client, F("System time"), String( getSystemTime() ) );
-    printNameValue( client, F("Scheduled send"), String( lNextSend ) );
-    printNameValue( client, F("strStarHost"), strStarHost );
-    // print star host IP
-    client.print( F( "<tr><td>" ) );
-    client.print( F("Star Host IP") );
-    client.print( F( "</td><td>" ) );
-    printStarIP( client );
-    client.print( F( "</td></tr>" ) );    
 
-    printNameValue( client, F("iInterval"), String( iInterval ) );
-//    client.println( printNameValue( "memory", String( free_ram() ) ) );
-    printNameValue( client, F("memory"), String( freeRam() ) );
+    printNameValue( client, F("SRAM"), String( freeRam() ) + F(" bytes") );
+    
+
+    client.print( F( "<tr><td colspan='3' align='center'> Star Host </td></tr>" ) );    
+
+    printNameValue( client, F("Hostname"), F("hostname"), strStarHost );
+    // print star host IP
+    client.print( F( "<tr><td> Host IP </td><td><tt> host_ip </tt></td><td><tt>" ) );
+    printStarIP( client );
+    client.print( F( "</tt></td></tr>" ) );    
+
+    printNameValue( client, F("Send, total success"), String( lSuccessAttempts ) );
+    printNameValue( client, F("Send, recent failed"), String( byteFailedAttempts ) );
+    printNameValue( client, F("Last success time"), String( lLastSendTime ) );
+
+    client.print( F( "<tr><td colspan='3' align='center'> Time (in ms) </td></tr>" ) );    
+    printNameValue( client, F("Running time"), String( millis() ) );
+    printNameValue( client, F("System time"), F("time"), String( getSystemTime() ) );
+    printNameValue( client, F("Send interval"), F("interval"), String( iInterval ) );
+    printNameValue( client, F("Scheduled send"), String( lNextSend ) );
 
     
     printSection( client, F("Request Details") );
@@ -497,25 +547,27 @@ void processRequest( EthernetClient client ) {
 //    printNameValue( client, F("strMessage"), strMessage );
     client.print( F( "<tr><td>" ) );
     client.print( F("strMessage") );
-    client.println( F( "</td><td><pre>" ) );
+    client.println( F( "</td><td colspan='2'><pre>" ) );
     client.println( strMessage );
     client.println( F( "</pre>\n</td></tr>" ) );    
     
 //    client.println( printSection( "Data Points" ) );
     printSection( client, F("Data Points") );
     // output the value of each analog input pin
+    client.print( F( "<tr><td colspan='3' align='center'> Analog Inputs </td></tr>" ) );    
     for ( int iA = 0; iA < 6; iA++ ) {
       int iValue = analogRead( iA );
-      client.print( F( "<tr><td>" ) );
+      client.print( F( "<tr><td colspan='2'>" ) );
       client.print( F( "Analog Input " ) );
       client.print( String( iA ) );
       client.print( F( "</td><td><tt>" ) );
       client.print( String( iValue ) );
       client.println( F( "</tt></td></tr>" ) );
     }
+    client.print( F( "<tr><td colspan='3' align='center'> Digital Inputs </td></tr>" ) );    
     for ( int iD = 2; iD < 14; iD++ ) {
       int iValue = digitalRead( iD );
-      client.print( F( "<tr><td>" ) );
+      client.print( F( "<tr><td colspan='2'>" ) );
       client.print( F( "Digital Input " ) );
       client.print( String( iD ) );
       client.print( F( "</td><td><tt>" ) );
@@ -532,7 +584,11 @@ void processRequest( EthernetClient client ) {
 
 
 void scheduleSend( long lTimeReference ) {
-  lNextSend = lTimeReference + iInterval;
+  if ( iInterval>0 && lTimeReference>0 ) {
+    lNextSend = lTimeReference + iInterval;
+  } else {
+    lNextSend = 0;
+  }
 }
 
 
