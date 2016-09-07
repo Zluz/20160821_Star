@@ -9,37 +9,80 @@ Global variables use 787 bytes (38%) of dynamic memory, leaving 1,261 bytes for 
 
 
 /* Included libraries */
+#include "DHT.h"
 #include <SPI.h>
 #include <Ethernet.h>
 #include <EEPROM.h>
 #include <avr/pgmspace.h>
 
+
 #define DEBUG // set to DEBUG to apply
+
+
+// DHT options
+#define DHTPIN 2     // what digital pin we're connected to
+// Uncomment whatever type you're using!
+#define DHTTYPE DHT11   // DHT 11
+//#define DHTTYPE DHT22   // DHT 22  (AM2302), AM2321
+//#define DHTTYPE DHT21   // DHT 21 (AM2301)
+DHT dht(DHTPIN, DHTTYPE);
+
+
 
 /* Constants */
 
-//const String strVersion = "20160903_001";
-const static String strVersion = "20160903_001";
-//const static String strVersion PROGMEM = "20160903_001";
-//const static String strVersion PROGMEM = "20160903_001";
-//const static char strVersion[] PROGMEM = "20160903_001";
-//const static char strVersion[] = F("20160903_001");
+const static String VERSION        PROGMEM = "20160906_001";
+//const static String COMMA          PROGMEM = ", ";
+//const static String OP_SET         PROGMEM = "/set";
+//const static String OP_SEND        PROGMEM = "/send";
+//const static String OP_MODE        PROGMEM = "/mode";
+//const static String OP_READ        PROGMEM = "/read";
+//const static String OP_WRITE       PROGMEM = "/write";
 
-byte macPlanet[] = { 0x01, 0x01, 0x01, 0x01, 0x01, 0x01 };
-IPAddress ipPlanet( 192,168,1,3 );
-IPAddress ipStar( 0,0,0,0 );
-byte arrStarIP[] = { 0,0,0,0 };
-byte byteFailedAttempts = 0;
-long lSuccessAttempts = 0;
-long lLastSendTime = 0;
+//const static String FIELD_HOSTNAME PROGMEM = "hostname";
+//const static String FIELD_HOST_IP  PROGMEM = "host_ip";
+//const static String FIELD_INTERVAL PROGMEM = "interval";
+//const static String FIELD_TIME     PROGMEM = "time";
+
+//const static char VERSION[] PROGMEM = "20160906_001";
+//const static char COMMA[] PROGMEM = {", "};
+//const static char OP_SET[] PROGMEM = "/set";
+//const static char OP_READ[] PROGMEM = {"/read"};
+//const static char OP_SEND[] PROGMEM = {"/send"};
+//const static char FIELD_HOSTNAME[] PROGMEM = {"hostname"};
+//const static char FIELD_HOST_IP[] PROGMEM = {"host_ip"};
+//const static char FIELD_INTERVAL[] PROGMEM = {"interval"};
+//const static char FIELD_TIME[] PROGMEM = {"time"};
+
+
+const static byte byteActivityLED = 13;
+
+
+
 
 /* Globals */
+
+static byte macPlanet[] = { 0x00, 0x00, 0x00, 0x00, 0x00, 0x00 };
+IPAddress ipPlanet( 192,168,1,3 );
+IPAddress ipStar( 192,168,1,210 );
+static byte arrStarIP[] = { 192,168,1,210 };
+byte byteFailedAttempts = 0;
+unsigned long lSuccessAttempts = 0;
+unsigned long lLastSendTime = 0;
+String strLastFailedMessage = "";
+
+const static long MAX_PIN = 13; // pins 0 and 1 are reserved. 2 to 13 are usable [on Uno].
+// output pin modes   0=undefined, 1=read mode, 2=write digital, 3=write analog
+//                           x  x  2  3  4  5  6  7  8  9 10 11 12 13
+static byte arrPinMode[] = { 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0 };
+
+//static char arrFloatToStr[16];
 
 char sIDRead[7];
 
 String strStarHost;
-int iInterval;
-long lNextSend;
+unsigned int iInterval;
+unsigned long lNextSend;
 
 EthernetServer server(80);
 
@@ -49,6 +92,28 @@ unsigned long lTime;
 
 
 /* Functions */
+
+
+//String printTimeValue( EthernetClient client,
+//                       const long lTime ) {
+//  /* 14 is mininum width, 3 is precision; float value is copied onto str_temp*/
+//  float fTime = ((float)lTime) / 1000;
+////  dtostrf( fTime, 11, 3, &arrFloatToStr[0] );
+//  dtostrf( fTime, 11, 3, arrFloatToStr );
+////  sprintf( arrFloatToStr, "%s F", arrFloatToStr );
+//  client.print( arrFloatToStr );
+//  client.print( F(" s") );
+//}
+
+
+String printTimeValue( EthernetClient client,
+                       const unsigned long lTime ) {
+  client.print( ((float)lTime) / 1000 );
+  client.print( F(" s") );
+
+//  client.print( lTime );
+//  client.print( F(" ms") );
+}
 
 
 String pop( String& strSource,
@@ -107,6 +172,11 @@ void resolveMACAddress() {
     for ( int i=0; i<6; i++ ) {
       macPlanet[i] = value[i];
     }
+  } else if ( strSerNo.equals( F("0101X1") ) ) {
+    const byte value[] PROGMEM = { 0x01, 0x01, 0x01, 0x01, 0x01, 0x01 };
+    for ( int i=0; i<6; i++ ) {
+      macPlanet[i] = value[i];
+    }
   } else {
 //    macPlanet = { 0x01, 0x01, 0x01, 0x01, 0x01, 0x01 };
   }
@@ -133,7 +203,7 @@ String getSerialNumber() {
 
 
 String getVersion() {
-  return strVersion;
+  return VERSION;
 }
 
 
@@ -189,6 +259,9 @@ String sendAtom() {
   
   Serial.println( F("--> sendAtom()") );
   
+  // light up activity LED
+  digitalWrite( byteActivityLED, HIGH );
+
   // HTTP client to star host
   EthernetClient client;
 
@@ -199,6 +272,12 @@ String sendAtom() {
   if ( iResult < 0 ) {
     String strResult = "Failed to connect, connect() response: " + String( iResult );
     Serial.println( F("<-- sendAtom(); iResult < 0") );
+    
+    strLastFailedMessage = F("Failed to connect");
+
+    // turn off activity LED
+    digitalWrite( byteActivityLED, LOW );
+    // return
     return strResult;
   }
   
@@ -207,13 +286,20 @@ String sendAtom() {
   if ( !client ) {
     byteFailedAttempts = byteFailedAttempts + 1;
     
-    if ( byteFailedAttempts > 1 ) {
+    if ( byteFailedAttempts > 2 ) {
       lNextSend = 0;
       iInterval = 0;
+      strLastFailedMessage = F("Client is false. Disabling schedule.");
+    } else {
+      strLastFailedMessage = F("Client is false. Not yet disabling schedule.");
     }
-    
+
     Serial.print( F("<-- sendAtom(); !client, byteFailedAttempts = ") );
     Serial.println( byteFailedAttempts );
+    
+    // turn off activity LED
+    digitalWrite( byteActivityLED, LOW );
+    // return
     return F( "Client is false." );
   }
 
@@ -241,9 +327,37 @@ String sendAtom() {
   client.print( F( "SerNo=" ) );
   client.print( getSerialNumber() );
   client.print( F( "&Ver=" ) );
-  client.print( strVersion );
+  client.print( getVersion() );
   client.print( F( "&Mem=" ) );
   client.print( String( freeRam() ) );
+
+
+  
+  // DHT11: temperature and humidity
+
+  // Reading temperature or humidity takes about 250 milliseconds!
+  // Sensor readings may also be up to 2 seconds 'old' (its a very slow sensor)
+  float fHumidity = dht.readHumidity();
+//  // Read temperature as Celsius (the default)
+//  float fTemperature = dht.readTemperature();
+  // Read temperature as Fahrenheit (isFahrenheit = true)
+  float fTemperature = dht.readTemperature(true);
+
+  // Check if any reads failed and exit early (to try again).
+  if ( isnan(fHumidity) || isnan(fTemperature) ) {
+    client.print( F( "Temp=NA&Humid=NA" ) );
+  } else {
+    client.print( F( "Temp=" ) );
+    client.print( String( fTemperature ) );
+    client.print( F( "&Humid=" ) );
+    client.print( String( fHumidity ) );
+  }
+  
+  
+  
+  
+  
+  
   
   
   client.println( F(" HTTP/1.1") );
@@ -270,6 +384,10 @@ String sendAtom() {
   byteFailedAttempts = 0;
   lSuccessAttempts = lSuccessAttempts + 1;
   
+  // turn off activity LED
+  digitalWrite( byteActivityLED, LOW );
+
+  // return
   String strResult = "Atom sent, response: " + strResponse;
   Serial.println( F("<-- sendAtom(), normal") );
 //  Serial.print( F("    sendAtom(), response = ") );
@@ -286,6 +404,9 @@ void processRequest( EthernetClient client ) {
   if ( !client.connected() ) return;
 
     /* pull the request from the stream */
+    
+    // light up activity LED
+    digitalWrite( byteActivityLED, HIGH );
 
     String strRequest;
     boolean bRead = true;
@@ -305,6 +426,9 @@ void processRequest( EthernetClient client ) {
         bRead = false;
       }
     }
+
+    // turn off activity LED
+    digitalWrite( byteActivityLED, LOW );
     
     /* extract info the request */
     
@@ -361,15 +485,18 @@ void processRequest( EthernetClient client ) {
     
    
     if ( strCommand.equals( F("/set") ) ) {
+//    if ( strCommand.equals( OP_SET ) ) {
       
 //      Serial.println( "(command is to set)" );
 
       if ( strName.equals( F("hostname") ) ) {
+//      if ( strName.equals( FIELD_HOSTNAME ) ) {
         
         strStarHost = strValue;
         strMessage = "host set to \"" + strStarHost + "\"";
 
       } else if ( strName.equals( F("host_ip") ) ) {
+//      } else if ( strName.equals( FIELD_HOST_IP ) ) {
 
 //        Serial.println( "(config value is host_ip)" );
         
@@ -413,6 +540,7 @@ void processRequest( EthernetClient client ) {
         strMessage = "Host IP set to " + strValue;
         
       } else if ( strName.equals( F("interval") ) ) {
+//      } else if ( strName.equals( FIELD_INTERVAL ) ) {
         
         String strInterval = strValue;
         strInterval.trim();
@@ -437,6 +565,7 @@ void processRequest( EthernetClient client ) {
         }
         
       } else if ( strName.equals( F("time") ) ) {
+//      } else if ( strName.equals( FIELD_TIME ) ) {
         
         String strTime = strValue;
         strTime.trim();
@@ -460,14 +589,66 @@ void processRequest( EthernetClient client ) {
       }
       
     } else if ( strCommand.equals( F("/send") ) ) {
+//    } else if ( strCommand.equals( OP_SEND ) ) {
 
       Serial.println( F("(request to send atom)") );
       
       String strResult = sendAtom();
 
       strMessage = "Request to send atom, result: " + strResult;
-      
+
+    } else if ( strCommand.equals( F("/mode") ) ) {
+
+      const long lPin = strName.toInt();
+      if ( lPin>1 && lPin<=MAX_PIN ) {
+        const long lValue = strValue.toInt();
+        if ( lValue>0 && lValue<4 ) {
+          arrPinMode[lPin] = lValue;
+          
+          if ( 1==lValue ) {
+            pinMode( lPin, INPUT );
+          } else {
+            pinMode( lPin, OUTPUT );
+          }
+          strMessage = "Pin " + strName + " set to mode " + strValue;
+        } else {
+          strMessage = "Failed to set pin mode. Invalid mode: " + strValue;
+        }
+      } else {
+        strMessage = "Failed to set pin mode. Invalid pin: " + strName;
+      }
+            
+    } else if ( strCommand.equals( F("/write") ) ) {
+//    } else if ( strCommand.equals( OP_WRITE ) ) {
+
+      const long lPin = strName.toInt();
+      if ( lPin>1 && lPin<=MAX_PIN ) {
+        
+        const long lValue = strValue.toInt();
+        const byte byteMode = arrPinMode[lPin];
+        
+        if ( 2==byteMode ) { // write digital
+          if ( lValue<2 ) {
+            digitalWrite( lPin, lValue );
+          } else {
+            strMessage = "Attempt to write failed: value is invalid for digital pin: " + strValue;
+          }
+        } else if ( 3==byteMode ) { // write PWM
+          if ( lValue<1024 ) {
+            analogWrite( lPin, lValue );
+          } else {
+            strMessage = "Attempt to write failed: value is invalid for PWM pin: " + strValue;
+          }
+        } else {
+          strMessage = "Attempt to write failed: Pin is invalid mode: " + byteMode;
+        }
+
+      } else {
+        strMessage = "Failed to write to pin. Invalid pin: " + strName;
+      }
+                  
     } else if ( strCommand.equals( F("/read") ) ) {
+//    } else if ( strCommand.equals( String( OP_READ ) ) ) {
 
       Serial.println( F("(command is to read)") );
 
@@ -477,13 +658,20 @@ void processRequest( EthernetClient client ) {
 
       Serial.println( F("(command is unknown)") );
       
-      strMessage = "Unknown command: \"" + strCommand + "\", available commands: \"/set\".";
-      
+      strMessage = "Unknown command: \"" + strCommand + "\".";
+//      strMessage = "Unknown command: \"" + strCommand + "\", available commands:\n";
+//          + OP_SET + " (" + FIELD_HOSTNAME + COMMA
+//              + FIELD_HOST_IP + COMMA + FIELD_INTERVAL + COMMA + FIELD_TIME + F(")") + COMMA
+//          + OP_READ + COMMA 
+//          + OP_SEND;
     }
     
     
     
     /* write the response back to the client */
+    
+    // light up activity LED
+    digitalWrite( byteActivityLED, HIGH );
 
 //    Serial.println( "Sending response back to client.." );
 
@@ -526,11 +714,25 @@ void processRequest( EthernetClient client ) {
 
     printNameValue( client, F("Send, total success"), String( lSuccessAttempts ) );
     printNameValue( client, F("Send, recent failed"), String( byteFailedAttempts ) );
+    printNameValue( client, F("Send, last failed message"), strLastFailedMessage );
+    
     printNameValue( client, F("Last success time"), String( lLastSendTime ) );
+//    client.print( F( "<tr><td colspan='2'> Last success time </td><td><tt>" ) );
+//    printTimeValue( client, lLastSendTime );
+//    client.println( F( "</tt>\n</td></tr>" ) );    
 
-    client.print( F( "<tr><td colspan='3' align='center'> Time (in ms) </td></tr>" ) );    
+    client.print( F( "<tr><td colspan='3' align='center'> Time (in ms) </td></tr>" ) );
+    
     printNameValue( client, F("Running time"), String( millis() ) );
+//    client.print( F( "<tr><td> Running time </td><td><tt> time </tt></td><td><tt>" ) );
+//    printTimeValue( client, millis() );
+//    client.println( F( "</tt>\n</td></tr>" ) );
+    
     printNameValue( client, F("System time"), F("time"), String( getSystemTime() ) );
+//    client.print( F( "<tr><td colspan='2'> System time </td><td><tt>" ) );
+//    printTimeValue( client, getSystemTime() );
+//    client.println( F( "</tt>\n</td></tr>" ) );    
+        
     printNameValue( client, F("Send interval"), F("interval"), String( iInterval ) );
     printNameValue( client, F("Scheduled send"), String( lNextSend ) );
 
@@ -567,9 +769,22 @@ void processRequest( EthernetClient client ) {
     client.print( F( "<tr><td colspan='3' align='center'> Digital Inputs </td></tr>" ) );    
     for ( int iD = 2; iD < 14; iD++ ) {
       int iValue = digitalRead( iD );
-      client.print( F( "<tr><td colspan='2'>" ) );
-      client.print( F( "Digital Input " ) );
+      client.print( F( "<tr><td> Digital Input " ) );
       client.print( String( iD ) );
+      client.print( F( "</td><td>" ) );
+      const byte byteMode = arrPinMode[iD];
+      if ( 0==byteMode ) {
+        client.print( F("0:undef") );
+      } else if ( 1==byteMode ) {
+        client.print( F("1:input") );
+      } else if ( 2==byteMode ) {
+        client.print( F("2:out digital") );
+      } else if ( 3==byteMode ) {
+        client.print( F("3:out PWM") );
+      } else {
+        client.print( String( byteMode ) );
+        client.print( F(":INVALID") );
+      }
       client.print( F( "</td><td><tt>" ) );
       client.print( String( iValue ) );
       client.println( F( "</tt></td></tr>" ) );
@@ -580,6 +795,9 @@ void processRequest( EthernetClient client ) {
     
   client.println( F("</html>" ) );
 //  Serial.println( "Response sent completely." );
+
+  // turn off activity LED
+  digitalWrite( byteActivityLED, LOW );
 }
 
 
@@ -595,6 +813,10 @@ void scheduleSend( long lTimeReference ) {
 void setup() {
   // put your setup code here, to run once:
   Serial.begin(9600);
+  
+  pinMode( byteActivityLED, OUTPUT );
+
+  dht.begin();
 
   resolveMACAddress();
   Ethernet.begin( macPlanet, ipPlanet );
@@ -623,4 +845,6 @@ void loop() {
     scheduleSend( lTimeNow );
   }
 
+  // turn off activity LED
+  digitalWrite( byteActivityLED, LOW );
 }
