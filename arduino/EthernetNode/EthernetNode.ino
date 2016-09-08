@@ -2,8 +2,8 @@
   EthernetNode
 
 Compiled for UNOs
-Sketch uses 25,486 bytes (79%) of program storage space. Maximum is 32,256 bytes.
-Global variables use 787 bytes (38%) of dynamic memory, leaving 1,261 bytes for local variables. Maximum is 2,048 bytes.  
+Sketch uses 30,136 bytes (93%) of program storage space. Maximum is 32,256 bytes.
+Global variables use 597 bytes (29%) of dynamic memory, leaving 1,451 bytes for local variables. Maximum is 2,048 bytes.
 
  ****************************************/
 
@@ -14,6 +14,8 @@ Global variables use 787 bytes (38%) of dynamic memory, leaving 1,261 bytes for 
 #include <Ethernet.h>
 #include <EEPROM.h>
 #include <avr/pgmspace.h>
+#include "Arduino.h"
+#include "DefineMessages.h"
 
 
 #define DEBUG // set to DEBUG to apply
@@ -31,7 +33,7 @@ DHT dht(DHTPIN, DHTTYPE);
 
 /* Constants */
 
-const static String VERSION        PROGMEM = "20160906_001";
+const static String VERSION        = "20160907_001";
 //const static String COMMA          PROGMEM = ", ";
 //const static String OP_SET         PROGMEM = "/set";
 //const static String OP_SEND        PROGMEM = "/send";
@@ -249,12 +251,13 @@ int freeRam() {
 
 
 
-String sendAtom() {
+int sendAtom() {
   if ( 0==arrStarIP[0] ) {
     lNextSend = 0;
     iInterval = 0;
 
-    return F("Star host IP not set");
+//    return F("Star host IP not set");
+    return MSG_SEND_FAILED_NO_STAR_HOST;
   }
   
   Serial.println( F("--> sendAtom()") );
@@ -278,7 +281,8 @@ String sendAtom() {
     // turn off activity LED
     digitalWrite( byteActivityLED, LOW );
     // return
-    return strResult;
+//    return strResult;
+    return MSG_SEND_FAILED_TO_CONNECT;
   }
   
   Serial.println( F("    sendAtom() - testing client") );
@@ -300,7 +304,8 @@ String sendAtom() {
     // turn off activity LED
     digitalWrite( byteActivityLED, LOW );
     // return
-    return F( "Client is false." );
+//    return F( "Client is false." );
+    return MSG_SEND_FAILED_NO_CLIENT;
   }
 
   Serial.println( F("    sendAtom() - print()") );
@@ -392,7 +397,8 @@ String sendAtom() {
   Serial.println( F("<-- sendAtom(), normal") );
 //  Serial.print( F("    sendAtom(), response = ") );
 //  Serial.println( strResponse );
-  return strResult;
+//  return strResult;
+  return MSG_SEND_SUCCESS;
 }
 
 
@@ -481,8 +487,10 @@ void processRequest( EthernetClient client ) {
    
     /* process the changes requested */ 
     
-    String strMessage = F("(no message)");
-    
+//    String strMessage = F("(no message)");
+    String strMsgText = "";
+    int iMsgCode = 0;
+    boolean bSendFullResponse = true;
    
     if ( strCommand.equals( F("/set") ) ) {
 //    if ( strCommand.equals( OP_SET ) ) {
@@ -493,7 +501,9 @@ void processRequest( EthernetClient client ) {
 //      if ( strName.equals( FIELD_HOSTNAME ) ) {
         
         strStarHost = strValue;
-        strMessage = "host set to \"" + strStarHost + "\"";
+//        strMessage = "host set to \"" + strStarHost + "\"";
+        iMsgCode = MSG_STAR_HOSTNAME_SET;
+        strMsgText = strStarHost;
 
       } else if ( strName.equals( F("host_ip") ) ) {
 //      } else if ( strName.equals( FIELD_HOST_IP ) ) {
@@ -537,7 +547,10 @@ void processRequest( EthernetClient client ) {
 
         ipStar = IPAddress( arrStarIP[0], arrStarIP[1], arrStarIP[2], arrStarIP[3] );
 
-        strMessage = "Host IP set to " + strValue;
+//        strMessage = "Host IP set to " + strValue;
+        iMsgCode = MSG_STAR_IP_SET;
+        strMsgText = strValue;
+        
         
       } else if ( strName.equals( F("interval") ) ) {
 //      } else if ( strName.equals( FIELD_INTERVAL ) ) {
@@ -550,22 +563,25 @@ void processRequest( EthernetClient client ) {
           
           iInterval = 0;
           scheduleSend( 0 );
-          strMessage = "Schedule send disabled.";
+//          strMessage = "Schedule send disabled.";
+          iMsgCode = MSG_SCHEDULE_DISABLED;
           
         } else if ( iValue>0 ) {
   
           iInterval = iValue;
           scheduleSend( getSystemTime() );
-          strMessage = "interval set to " + String( iValue ) + ".";
+//          strMessage = "interval set to " + String( iValue ) + ".";
+          iMsgCode = MSG_INTERVAL_SET;
 
         } else {
           
-          strMessage = "Invalid interval value: \"" + strValue + "\".";
+//          strMessage = "Invalid interval value: \"" + strValue + "\".";
+          iMsgCode = MSG_INTERVAL_INVALID_VALUE;
+          strMsgText = strValue;
           
         }
         
       } else if ( strName.equals( F("time") ) ) {
-//      } else if ( strName.equals( FIELD_TIME ) ) {
         
         String strTime = strValue;
         strTime.trim();
@@ -574,18 +590,22 @@ void processRequest( EthernetClient client ) {
           
           const long lRunningTime = millis();
           lTime = lValue - lRunningTime;
-          strMessage = "Time offset set to " + String( lTime ) + ".";
+//          strMessage = "Time offset set to " + String( lTime ) + ".";
+          iMsgCode = MSG_TIME_OFFSET_SET;
+          strMsgText = strTime;
 
           scheduleSend( getSystemTime() );
           
         } else {
-          
-          strMessage = "Invalid time value: \"" + strValue + "\".";
-          
+//          strMessage = "Invalid time value: \"" + strValue + "\".";
+          iMsgCode = MSG_TIME_OFFSET_INVALID_VALUE;
+          strMsgText = strValue;
         }
         
       } else {
-          strMessage = "Invalid variable: \"" + strName + "\".";
+//          strMessage = "Invalid variable: \"" + strName + "\".";
+        iMsgCode = MSG_INVALID_VARIABLE;
+        strMsgText = strName;
       }
       
     } else if ( strCommand.equals( F("/send") ) ) {
@@ -593,9 +613,15 @@ void processRequest( EthernetClient client ) {
 
       Serial.println( F("(request to send atom)") );
       
-      String strResult = sendAtom();
+      iMsgCode = sendAtom();
+      //strMsgText = "";
 
-      strMessage = "Request to send atom, result: " + strResult;
+      if ( strName.equals( "fast" ) ) {
+        bSendFullResponse = false;
+      }
+
+//      strMessage = "Request to send atom, result: " + strResult;
+//      strMsgText = strResult;
 
     } else if ( strCommand.equals( F("/mode") ) ) {
 
@@ -610,12 +636,20 @@ void processRequest( EthernetClient client ) {
           } else {
             pinMode( lPin, OUTPUT );
           }
-          strMessage = "Pin " + strName + " set to mode " + strValue;
+//          strMessage = "Pin " + strName + " set to mode " + strValue;
+          iMsgCode = MSG_SET_PIN_MODE_SUCCESS;
+          strMsgText = strName;
         } else {
-          strMessage = "Failed to set pin mode. Invalid mode: " + strValue;
+//          strMessage = "Failed to set pin mode. Invalid mode: " + strValue;
+//          strMessage = "Invalid mode: " + strValue;
+          iMsgCode = MSG_SET_PIN_MODE_INVALID_MODE;
+          strMsgText = strValue;
         }
       } else {
-        strMessage = "Failed to set pin mode. Invalid pin: " + strName;
+//        strMessage = "Failed to set pin mode. Invalid pin: " + strName;
+//        strMessage = "Invalid pin: " + strName;
+        iMsgCode = MSG_SET_PIN_MODE_INVALID_PIN;
+        strMsgText = strName;
       }
             
     } else if ( strCommand.equals( F("/write") ) ) {
@@ -630,21 +664,37 @@ void processRequest( EthernetClient client ) {
         if ( 2==byteMode ) { // write digital
           if ( lValue<2 ) {
             digitalWrite( lPin, lValue );
+            iMsgCode = MSG_WRITE_DIGITAL_SUCCESS;
+            strMsgText = strName;
           } else {
-            strMessage = "Attempt to write failed: value is invalid for digital pin: " + strValue;
+//            strMessage = "Attempt to write failed: value is invalid for digital pin: " + strValue;
+//            strMessage = "Value is invalid for digital pin: " + strValue;
+            iMsgCode = MSG_WRITE_DIGITAL_INVALID_VALUE;
+            strMsgText = strValue;
           }
         } else if ( 3==byteMode ) { // write PWM
           if ( lValue<1024 ) {
             analogWrite( lPin, lValue );
+            iMsgCode = MSG_WRITE_PWM_SUCCESS;
+            strMsgText = strName;
           } else {
-            strMessage = "Attempt to write failed: value is invalid for PWM pin: " + strValue;
+//            strMessage = "Attempt to write failed: value is invalid for PWM pin: " + strValue;
+//            strMessage = "Value is invalid for PWM pin: " + strValue;
+            iMsgCode = MSG_WRITE_PWM_INVALID_VALUE;
+            strMsgText = strValue;
           }
         } else {
-          strMessage = "Attempt to write failed: Pin is invalid mode: " + byteMode;
+//          strMessage = "Attempt to write failed: Pin is invalid mode: " + byteMode;
+//          strMessage = "Pin is in invalid mode: " + byteMode;
+            iMsgCode = MSG_WRITE_PIN_INVALID_MODE;
+            strMsgText = String( byteMode );
         }
 
       } else {
-        strMessage = "Failed to write to pin. Invalid pin: " + strName;
+//        strMessage = "Failed to write to pin. Invalid pin: " + strName;
+//        strMessage = "Invalid pin: " + strName;
+        iMsgCode = MSG_WRITE_PIN_INVALID_PIN;
+        strMsgText = strName;
       }
                   
     } else if ( strCommand.equals( F("/read") ) ) {
@@ -652,23 +702,29 @@ void processRequest( EthernetClient client ) {
 
       Serial.println( F("(command is to read)") );
 
-      strMessage = F("Read request recognized.");
+//      strMessage = F("Read request recognized.");
+      iMsgCode = MSG_OP_READ_SUCCESS;
+//      strMsgText = ""; // nothing to say
       
     } else {
 
       Serial.println( F("(command is unknown)") );
       
-      strMessage = "Unknown command: \"" + strCommand + "\".";
+//      strMessage = "Unknown command: \"" + strCommand + "\".";
 //      strMessage = "Unknown command: \"" + strCommand + "\", available commands:\n";
 //          + OP_SET + " (" + FIELD_HOSTNAME + COMMA
 //              + FIELD_HOST_IP + COMMA + FIELD_INTERVAL + COMMA + FIELD_TIME + F(")") + COMMA
 //          + OP_READ + COMMA 
 //          + OP_SEND;
+      iMsgCode = MSG_OP_UNKNOWN;
+      strMsgText = strCommand;
     }
     
     
     
     /* write the response back to the client */
+    
+    
     
     // light up activity LED
     digitalWrite( byteActivityLED, HIGH );
@@ -677,128 +733,208 @@ void processRequest( EthernetClient client ) {
 
     // send a standard http response header
     client.println( F("HTTP/1.1 200 OK" ) );
-    client.println( F("Content-Type: text/html" ) );
+//    client.println( F("Connection: close" ) );  // the connection will be closed after completion of the response
+//    client.println("Refresh: 1");  // refresh the page automatically every 5 sec
+//    client.println();
+    
+    if ( bSendFullResponse ) {
+
+      sendHTMLHeader( client );
+
+//      client.println( F("Content-Type: text/html" ) );
+//
+//      client.println( F("Connection: close" ) );  // the connection will be closed after completion of the response
+//      client.println();
+//
+//      client.println( F("<!DOCTYPE HTML>" ) );
+//      client.println( F("<html>" ) );
+      
+      client.println( F("<font face='verdana'>" ) );
+      client.println( F("<table border='1' cellpadding='4'>" ) );
+      
+      printSection( client, F("Configuration") );
+      printNameValue( client, F("Serial Number"), getSerialNumber() );
+      
+  //    printNameValue( client, F("MAC Address"), getMACAddress() );
+      // print mac address
+      client.print( F( "<tr><td colspan='2'>" ) );
+      client.print( F("MAC Address") );
+      client.print( F( "</td><td><tt>" ) );
+      printMACAddress( client );
+      client.print( F( "</tt></td></tr>" ) );    
+  
+  //    client.println( printNameValue( "MAC Address", macPlanet ) );
+      printNameValue( client, F("Sketch Version"), getVersion() );
+  
+      printNameValue( client, F("SRAM"), String( freeRam() ) + F(" bytes") );
+      
+  
+      client.print( F( "<tr><td colspan='3' align='center'> Star Host </td></tr>" ) );    
+  
+      printNameValue( client, F("Hostname"), F("hostname"), strStarHost );
+      // print star host IP
+      client.print( F( "<tr><td>Host IP</td><td><tt>host_ip</tt></td><td><tt>" ) );
+      printStarIP( client );
+      client.print( F( "</tt></td></tr>" ) );    
+  
+      printNameValue( client, F("Send, total success"), String( lSuccessAttempts ) );
+      printNameValue( client, F("Send, recent failed"), String( byteFailedAttempts ) );
+      printNameValue( client, F("Send, last failed message"), strLastFailedMessage );
+      
+      printNameValue( client, F("Last success time"), String( lLastSendTime ) );
+  //    client.print( F( "<tr><td colspan='2'> Last success time </td><td><tt>" ) );
+  //    printTimeValue( client, lLastSendTime );
+  //    client.println( F( "</tt>\n</td></tr>" ) );    
+  
+      client.print( F( "<tr><td colspan='3' align='center'>Time (in ms)</td></tr>" ) );
+      
+      printNameValue( client, F("Running time"), String( millis() ) );
+  //    client.print( F( "<tr><td> Running time </td><td><tt> time </tt></td><td><tt>" ) );
+  //    printTimeValue( client, millis() );
+  //    client.println( F( "</tt>\n</td></tr>" ) );
+      
+      printNameValue( client, F("System time"), F("time"), String( getSystemTime() ) );
+  //    client.print( F( "<tr><td colspan='2'> System time </td><td><tt>" ) );
+  //    printTimeValue( client, getSystemTime() );
+  //    client.println( F( "</tt>\n</td></tr>" ) );    
+          
+      printNameValue( client, F("Send interval"), F("interval"), String( iInterval ) );
+      printNameValue( client, F("Scheduled send"), String( lNextSend ) );
+  
+      
+      printSection( client, F("Request Details") );
+      printNameValue( client, F("strOriginal"), strOriginal );
+      printNameValue( client, F("strRequest"), strRequest );
+      printNameValue( client, F("strCommand"), strCommand );
+      printNameValue( client, F("strParams"), strParams );
+      printNameValue( client, F("strName"), strName );
+      printNameValue( client, F("strValue"), strValue );
+      
+      printSection( client, F("Results") );
+  //    printNameValue( client, F("strMessage"), strMessage );
+      client.print( F( "<tr><td>" ) );
+      client.print( F("Message") );
+      client.println( F( "</td><td>" ) );
+      client.println( String( iMsgCode ) );
+      client.println( F( "</td><td>" ) );
+      client.println( strMsgText );
+      client.println( F( "</td></tr>" ) );    
+      
+  //    client.println( printSection( "Data Points" ) );
+      printSection( client, F("Data Points") );
+      // output the value of each analog input pin
+      client.print( F( "<tr><td colspan='3' align='center'>Analog Inputs</td></tr>" ) );    
+      for ( int iA = 0; iA < 6; iA++ ) {
+        int iValue = analogRead( iA );
+        client.print( F( "<tr><td colspan='2'>" ) );
+        client.print( F( "Analog Input " ) );
+        client.print( String( iA ) );
+        client.print( F( "</td><td><tt>" ) );
+        client.print( String( iValue ) );
+        client.println( F( "</tt></td></tr>" ) );
+      }
+      client.print( F( "<tr><td colspan='3' align='center'>Digital Inputs</td></tr>" ) );    
+      for ( int iD = 2; iD < 14; iD++ ) {
+        int iValue = digitalRead( iD );
+        client.print( F( "<tr><td>Digital Input" ) );
+        client.print( String( iD ) );
+        client.print( F( "</td><td>" ) );
+        const byte byteMode = arrPinMode[iD];
+        if ( 0==byteMode ) {
+          client.print( F("0:undef") );
+        } else if ( 1==byteMode ) {
+          client.print( F("1:input") );
+        } else if ( 2==byteMode ) {
+          client.print( F("2:out digital") );
+        } else if ( 3==byteMode ) {
+          client.print( F("3:out PWM") );
+        } else {
+          client.print( String( byteMode ) );
+          client.print( F(":INVALID") );
+        }
+        client.print( F( "</td><td><tt>" ) );
+        client.print( String( iValue ) );
+        client.println( F( "</tt></td></tr>" ) );
+      }
+  
+      
+      client.println( F("</table></font>" ) );
+    
+      client.println( F("</html>" ) );
+
+    } else {
+      
+//      client.println( F("Content-Type: text/plain" ) );
+//      client.println( F("Connection: close" ) );  // the connection will be closed after completion of the response
+//      client.println();
+//      client.print( F("iMsgCode: " ) );
+//      client.println( String( iMsgCode ) );
+      
+      sendHTMLHeader( client );
+      client.print( F("<tt>iMsgCode: " ) );
+      client.println( String( iMsgCode ) );
+      client.print( F("</tt></html>" ) );
+    }
+    
+//  Serial.println( "Response sent completely." );
+
+    
+    
+  // turn off activity LED
+  digitalWrite( byteActivityLED, LOW );
+}
+
+
+void sendHTMLHeader( EthernetClient client ) {
+  client.println( F("Content-Type: text/html" ) );
+  client.println( F("Connection: close" ) );  // the connection will be closed after completion of the response
+  client.println();
+  client.println( F("<!DOCTYPE HTML>" ) );
+  client.println( F("<html>" ) );
+}
+
+
+void sendDataJSONResponse( EthernetClient client ) {
+
+    // light up activity LED
+    digitalWrite( byteActivityLED, HIGH );
+
+//    Serial.println( "Sending response back to client.." );
+
+    // send a standard http response header
+    client.println( F("HTTP/1.1 200 OK" ) );
+    client.println( F("Content-Type: application/json" ) );
     client.println( F("Connection: close" ) );  // the connection will be closed after completion of the response
 //    client.println("Refresh: 1");  // refresh the page automatically every 5 sec
     client.println();
-    client.println( F("<!DOCTYPE HTML>" ) );
-    client.println( F("<html>" ) );
-    
-    client.println( F("<font face='verdana'>" ) );
-    client.println( F("<table border='1' cellpadding='4'>" ) );
-    
-    printSection( client, F("Configuration") );
-    printNameValue( client, F("Serial Number"), getSerialNumber() );
-    
-//    printNameValue( client, F("MAC Address"), getMACAddress() );
-    // print mac address
-    client.print( F( "<tr><td colspan='2'>" ) );
-    client.print( F("MAC Address") );
-    client.print( F( "</td><td><tt>" ) );
-    printMACAddress( client );
-    client.print( F( "</tt></td></tr>" ) );    
 
-//    client.println( printNameValue( "MAC Address", macPlanet ) );
-    printNameValue( client, F("Sketch Version"), getVersion() );
-
-    printNameValue( client, F("SRAM"), String( freeRam() ) + F(" bytes") );
-    
-
-    client.print( F( "<tr><td colspan='3' align='center'> Star Host </td></tr>" ) );    
-
-    printNameValue( client, F("Hostname"), F("hostname"), strStarHost );
-    // print star host IP
-    client.print( F( "<tr><td> Host IP </td><td><tt> host_ip </tt></td><td><tt>" ) );
-    printStarIP( client );
-    client.print( F( "</tt></td></tr>" ) );    
-
-    printNameValue( client, F("Send, total success"), String( lSuccessAttempts ) );
-    printNameValue( client, F("Send, recent failed"), String( byteFailedAttempts ) );
-    printNameValue( client, F("Send, last failed message"), strLastFailedMessage );
-    
-    printNameValue( client, F("Last success time"), String( lLastSendTime ) );
-//    client.print( F( "<tr><td colspan='2'> Last success time </td><td><tt>" ) );
-//    printTimeValue( client, lLastSendTime );
-//    client.println( F( "</tt>\n</td></tr>" ) );    
-
-    client.print( F( "<tr><td colspan='3' align='center'> Time (in ms) </td></tr>" ) );
-    
-    printNameValue( client, F("Running time"), String( millis() ) );
-//    client.print( F( "<tr><td> Running time </td><td><tt> time </tt></td><td><tt>" ) );
-//    printTimeValue( client, millis() );
-//    client.println( F( "</tt>\n</td></tr>" ) );
-    
-    printNameValue( client, F("System time"), F("time"), String( getSystemTime() ) );
-//    client.print( F( "<tr><td colspan='2'> System time </td><td><tt>" ) );
-//    printTimeValue( client, getSystemTime() );
-//    client.println( F( "</tt>\n</td></tr>" ) );    
-        
-    printNameValue( client, F("Send interval"), F("interval"), String( iInterval ) );
-    printNameValue( client, F("Scheduled send"), String( lNextSend ) );
-
-    
-    printSection( client, F("Request Details") );
-    printNameValue( client, F("strOriginal"), strOriginal );
-    printNameValue( client, F("strRequest"), strRequest );
-    printNameValue( client, F("strCommand"), strCommand );
-    printNameValue( client, F("strParams"), strParams );
-    printNameValue( client, F("strName"), strName );
-    printNameValue( client, F("strValue"), strValue );
-    
-    printSection( client, F("Results") );
-//    printNameValue( client, F("strMessage"), strMessage );
-    client.print( F( "<tr><td>" ) );
-    client.print( F("strMessage") );
-    client.println( F( "</td><td colspan='2'><pre>" ) );
-    client.println( strMessage );
-    client.println( F( "</pre>\n</td></tr>" ) );    
-    
-//    client.println( printSection( "Data Points" ) );
-    printSection( client, F("Data Points") );
     // output the value of each analog input pin
-    client.print( F( "<tr><td colspan='3' align='center'> Analog Inputs </td></tr>" ) );    
+    client.println( F( "{" ) );    
     for ( int iA = 0; iA < 6; iA++ ) {
       int iValue = analogRead( iA );
-      client.print( F( "<tr><td colspan='2'>" ) );
-      client.print( F( "Analog Input " ) );
+      client.print( F( "  \"A" ) );
       client.print( String( iA ) );
-      client.print( F( "</td><td><tt>" ) );
+      client.print( F( "\": " ) );
       client.print( String( iValue ) );
-      client.println( F( "</tt></td></tr>" ) );
+      client.println( F( "," ) );
     }
-    client.print( F( "<tr><td colspan='3' align='center'> Digital Inputs </td></tr>" ) );    
     for ( int iD = 2; iD < 14; iD++ ) {
       int iValue = digitalRead( iD );
-      client.print( F( "<tr><td> Digital Input " ) );
+      client.print( F( "  \"D" ) );
       client.print( String( iD ) );
-      client.print( F( "</td><td>" ) );
-      const byte byteMode = arrPinMode[iD];
-      if ( 0==byteMode ) {
-        client.print( F("0:undef") );
-      } else if ( 1==byteMode ) {
-        client.print( F("1:input") );
-      } else if ( 2==byteMode ) {
-        client.print( F("2:out digital") );
-      } else if ( 3==byteMode ) {
-        client.print( F("3:out PWM") );
-      } else {
-        client.print( String( byteMode ) );
-        client.print( F(":INVALID") );
-      }
-      client.print( F( "</td><td><tt>" ) );
+      client.print( F( "\": " ) );
       client.print( String( iValue ) );
-      client.println( F( "</tt></td></tr>" ) );
+      client.println( F( "," ) );
     }
-
     
     client.println( F("</table></font>" ) );
     
   client.println( F("</html>" ) );
 //  Serial.println( "Response sent completely." );
 
-  // turn off activity LED
-  digitalWrite( byteActivityLED, LOW );
 }
+
+//void sendCompleteHTMLResponse() {}
 
 
 void scheduleSend( long lTimeReference ) {
