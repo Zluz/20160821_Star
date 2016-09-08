@@ -39,3 +39,11 @@
 #define MSG_OP_READ_SUCCESS				1103
 
 #define MSG_OP_UNKNOWN					1100
+
+
+#define SEND_CODE_NODE_INIT         2000
+#define SEND_CODE_SCHEDULED         2001
+#define SEND_CODE_DIGITAL_CHANGE    2002
+#define SEND_CODE_ANALOG_CHANGE     2003
+#define SEND_CODE_TRIGGER           2004
+#define SEND_CODE_REQUESTED         2005

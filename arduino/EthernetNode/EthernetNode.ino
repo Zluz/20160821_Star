@@ -2,7 +2,7 @@
   EthernetNode
 
 Compiled for UNOs
-Sketch uses 30,136 bytes (93%) of program storage space. Maximum is 32,256 bytes.
+Sketch uses 30,194 bytes (93%) of program storage space. Maximum is 32,256 bytes.
 Global variables use 597 bytes (29%) of dynamic memory, leaving 1,451 bytes for local variables. Maximum is 2,048 bytes.
 
  ****************************************/
@@ -251,7 +251,7 @@ int freeRam() {
 
 
 
-int sendAtom() {
+int sendAtom( int iSendCode ) {
   if ( 0==arrStarIP[0] ) {
     lNextSend = 0;
     iInterval = 0;
@@ -313,28 +313,30 @@ int sendAtom() {
   lLastSendTime = getSystemTime();
   
   client.print( F("GET /atom?") );
-  for ( int iA = 0; iA < 6; iA++ ) {
-    int iValue = analogRead( iA );
-    client.print( F( "A" ) );
-    client.print( String( iA ) );
-    client.print( F( "=" ) );
-    client.print( String( iValue ) );
-    client.print( F( "&" ) );
-  }
-  for ( int iD = 2; iD < 14; iD++ ) {
-    int iValue = digitalRead( iD );
-    client.print( F( "D" ) );
-    client.print( String( iD ) );
-    client.print( F( "=" ) );
-    client.print( String( iValue ) );
-    client.print( F( "&" ) );
-  }
-  client.print( F( "SerNo=" ) );
+  
+  client.print( F( "SendCode=" ) );
+  client.print( String( iSendCode ) );
+  client.print( F( "&SerNo=" ) );
   client.print( getSerialNumber() );
   client.print( F( "&Ver=" ) );
   client.print( getVersion() );
   client.print( F( "&Mem=" ) );
   client.print( String( freeRam() ) );
+  
+  for ( int iA = 0; iA < 6; iA++ ) {
+    int iValue = analogRead( iA );
+    client.print( F( "&A" ) );
+    client.print( String( iA ) );
+    client.print( F( "=" ) );
+    client.print( String( iValue ) );
+  }
+  for ( int iD = 2; iD < 14; iD++ ) {
+    int iValue = digitalRead( iD );
+    client.print( F( "&D" ) );
+    client.print( String( iD ) );
+    client.print( F( "=" ) );
+    client.print( String( iValue ) );
+  }
 
 
   
@@ -350,16 +352,16 @@ int sendAtom() {
 
   // Check if any reads failed and exit early (to try again).
   if ( isnan(fHumidity) || isnan(fTemperature) ) {
-    client.print( F( "Temp=NA&Humid=NA" ) );
+    client.print( F( "&Temp=NA&Humid=NA" ) );
   } else {
-    client.print( F( "Temp=" ) );
+    client.print( F( "&Temp=" ) );
     client.print( String( fTemperature ) );
     client.print( F( "&Humid=" ) );
     client.print( String( fHumidity ) );
   }
   
   
-  
+ 
   
   
   
@@ -551,6 +553,7 @@ void processRequest( EthernetClient client ) {
         iMsgCode = MSG_STAR_IP_SET;
         strMsgText = strValue;
         
+        sendAtom( SEND_CODE_NODE_INIT );
         
       } else if ( strName.equals( F("interval") ) ) {
 //      } else if ( strName.equals( FIELD_INTERVAL ) ) {
@@ -613,7 +616,7 @@ void processRequest( EthernetClient client ) {
 
       Serial.println( F("(request to send atom)") );
       
-      iMsgCode = sendAtom();
+      iMsgCode = sendAtom( SEND_CODE_REQUESTED );
       //strMsgText = "";
 
       if ( strName.equals( "fast" ) ) {
@@ -959,6 +962,8 @@ void setup() {
   server.begin();
   Serial.print( F("server is ") );
   Serial.println( Ethernet.localIP() );
+  
+  sendAtom( SEND_CODE_NODE_INIT );
 }
 
 
@@ -977,7 +982,7 @@ void loop() {
 
   const long lTimeNow = getSystemTime();
   if ( (lTimeNow>0) && (lNextSend>0) && (lTimeNow>lNextSend) ) {
-    sendAtom();
+    sendAtom( SEND_CODE_SCHEDULED );
     scheduleSend( lTimeNow );
   }
 

@@ -8,6 +8,7 @@ import java.net.UnknownHostException;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Paths;
+import java.util.Date;
 
 public class Util {
 
@@ -49,6 +50,19 @@ public class Util {
 	}
 	
 	
+	public static String getHostIP() {
+		try {
+			final InetAddress host = InetAddress.getLocalHost();
+			final String strHostIP = host.getHostAddress();
+			return strHostIP;
+		} catch ( final UnknownHostException e ) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
+		return UNKNOWN;
+	}
+	
+	
 	public static String getTextFromFile( final File file ) {
 		if ( null==file ) return null;
 		if ( !file.exists() ) return null;
@@ -63,5 +77,12 @@ public class Util {
 			return null;
 		}
 	}
+	
+	
+	public static void main( final String[] args ) {
+//		final long lNow = (new Date()).getTime();
+//		System.out.println( lNow );
+	}
+	
 	
 }

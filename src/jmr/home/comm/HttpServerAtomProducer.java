@@ -9,10 +9,12 @@ import java.io.FileInputStream;
 import java.io.IOException;
 import java.io.OutputStream;
 import java.io.UnsupportedEncodingException;
+import java.net.InetAddress;
 import java.net.InetSocketAddress;
 import java.net.URI;
 import java.net.URLDecoder;
 import java.nio.charset.StandardCharsets;
+import java.util.HashMap;
 import java.util.LinkedHashMap;
 import java.util.Map;
 import java.util.Map.Entry;
@@ -26,13 +28,15 @@ import com.sun.net.httpserver.HttpServer;
 
 import jmr.home.engine.Relay;
 import jmr.home.model.Atom;
+import jmr.home.model.IAtomConsumer;
+import jmr.util.Util;
 
 /*
  *	http://localhost:8000/atom?name01=value01&name02=value02&name03=value03
  */
 
 
-public class HttpServerAtomProducer {
+public class HttpServerAtomProducer implements IAtomConsumer {
 	
 	final static private HttpServerAtomProducer 
 			instance = new HttpServerAtomProducer();
@@ -40,7 +44,12 @@ public class HttpServerAtomProducer {
 	
 	public final static int PORT_HOSTED = 80;
 	
-	public HttpServerAtomProducer() {}
+//	public final List<String> listPlanets = new LinkedList<>();
+	public final Map<String,String> mapPlanets = new HashMap<>();
+	
+	public HttpServerAtomProducer() {
+		Relay.get().registerConsumer( this );
+	}
 	
 	public static HttpServerAtomProducer get() {
 		return instance;
@@ -82,12 +91,13 @@ public class HttpServerAtomProducer {
 	    return map;
 	}
 	
-	private static class AtomHandler implements HttpHandler {
+	private class AtomHandler implements HttpHandler {
 		@Override
 		public void handle( final HttpExchange exchange ) throws IOException {
 
 			System.out.println( "Incoming request: " + exchange );
-			System.out.println( "\tfrom: " + exchange.getRemoteAddress().getAddress() );
+			final InetAddress addrRemote = exchange.getRemoteAddress().getAddress();
+			System.out.println( "\tfrom: " + addrRemote );
 			System.out.println( "\tURI: " + exchange.getRequestURI() );
 			
 			final Atom atom = new Atom(	Atom.Type.EVENT, 
@@ -99,6 +109,15 @@ public class HttpServerAtomProducer {
 			final Map<String, String> map = extractParameters( uri );
 			for ( final Entry<String, String> entry : map.entrySet() ) {
 				atom.put( entry.getKey(), entry.getValue() );
+			}
+
+			final String strPlanetIP = addrRemote.getHostAddress();
+			atom.put( VAR_PLANET_IP, strPlanetIP );
+			atom.put( VAR_STAR_IP, Util.getHostIP() );
+			
+			final String strSerNo = atom.get( VAR_SERIAL_NUMBER );
+			if ( null!=strSerNo && !strSerNo.isEmpty() ) {
+				mapPlanets.put( strSerNo, strPlanetIP );
 			}
 			
 			// add headers to atom
@@ -155,7 +174,7 @@ public class HttpServerAtomProducer {
 
       // add the required response header for a PDF file
       Headers h = t.getResponseHeaders();
-      h.add("Content-Type", "application/pdf");
+      h.add( "Content-Type", "application/pdf" );
 
       // a PDF (you provide your own!)
       File file = new File ("c:/temp/doc.pdf");
@@ -173,4 +192,23 @@ public class HttpServerAtomProducer {
       os.close();
     }
   }
+
+
+
+	
+  @Override
+  public void consume( final Atom atom ) {
+	  if ( null==atom ) return;
+	  
+	  final String strDestSerNo = atom.get( VAR_DEST_SERNO );
+	  final String strCommand = atom.get( VAR_COMMAND );
+	  if ( mapPlanets.keySet().contains( strDestSerNo ) ) {
+		  final String strIP = mapPlanets.get( strDestSerNo );
+		  
+		  final String strURL = "http://" + strIP + strCommand;
+		  final URLReader reader = new URLReader( strURL );
+		  reader.getContent();
+	  }
+  }
+  
 }

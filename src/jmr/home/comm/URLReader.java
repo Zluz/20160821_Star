@@ -13,7 +13,10 @@ public class URLReader {
 	
 	public String getContent() {
 		try {
-	        final URL url = new URL( strURL );
+
+			System.out.println( "Opening URL: " + strURL );
+
+			final URL url = new URL( strURL );
 	        final InputStreamReader isr = new InputStreamReader(url.openStream());
 			final BufferedReader in = new BufferedReader( isr );
 	

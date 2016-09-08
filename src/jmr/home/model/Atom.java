@@ -4,7 +4,6 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.LinkedList;
 import java.util.List;
-import java.util.Map;
 
 import jmr.util.Util;
 
@@ -13,6 +12,8 @@ public class Atom extends HashMap<String,String> implements IAtomValues {
 
 	public static enum Type { SYSTEM, STATUS, EVENT, INVOKE };
 
+	public final static int INVALID_VALUE = -1;
+	
 	private static final long serialVersionUID = 1L;
 	
 	public String strName;
@@ -28,7 +29,8 @@ public class Atom extends HashMap<String,String> implements IAtomValues {
 					final String strPort ) {
 		this.type = type;
 		this.put( VAR_TIME, Long.toString( lTime ) );
-		this.put( VAR_ORIG_HOST, Util.getHostname() );
+//		this.put( VAR_ORIG_HOST, Util.getHostname() );
+		this.put( VAR_ORIG_HOST, Util.getHostIP() );
 		this.put( VAR_ORIG_PORT, strPort );
 	};
 	
@@ -46,6 +48,19 @@ public class Atom extends HashMap<String,String> implements IAtomValues {
 		
 		listKeys.add( key );
 		return super.put(key, value);
+	}
+	
+	public int getAsInt( final String key ) {
+		if ( null==key ) return INVALID_VALUE;
+		if ( !this.containsKey( key ) ) return INVALID_VALUE;
+		
+		final String strValue = this.get( key );
+		try {
+			final int iValue = Integer.parseInt( strValue );
+			return iValue;
+		} catch ( final NumberFormatException e ) {
+			return INVALID_VALUE;
+		}
 	}
 	
 	public List<String> getOrderedKeys() {
@@ -128,9 +143,11 @@ public class Atom extends HashMap<String,String> implements IAtomValues {
 	public String report() {
 		final StringBuffer strbuf = new StringBuffer();
 		strbuf.append( this.toString() + "\n" );
-		for ( final Map.Entry<String, String> entry : this.entrySet() ) {
-			final String strKey = entry.getKey();
-			final String strValue = entry.getValue();
+//		for ( final Map.Entry<String, String> entry : this.entrySet() ) {
+		for ( final String strKey : this.listKeys ) {
+//			final String strKey = entry.getKey();
+//			final String strValue = entry.getValue();
+			final String strValue = this.get( strKey );
 			strbuf.append( "\t\"" + strKey + "\"=\"" + strValue + "\"\n" );
 		}
 		return strbuf.toString();

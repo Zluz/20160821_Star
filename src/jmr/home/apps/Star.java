@@ -28,11 +28,15 @@ import jmr.home.comm.SerialConnector.ComBaud;
 import jmr.home.engine.Processor;
 import jmr.home.engine.Relay;
 import jmr.home.model.SystemAtoms;
+import jmr.util.Util;
 
 public class Star {
 	
 	private static final String TIMESTAMP = "HH:mm:ss.SSS";
 
+	public static final boolean ENABLE_COM_PORT_SCANNING = false;
+	
+	
 	public final static Display display = new Display();
 	
 	private final Shell shell;
@@ -66,8 +70,9 @@ public class Star {
 		log( "Star initialized." );
 		log( "Shell size: " + this.shell.getSize() );
 		
-		
-		startPortMonitor();
+		if ( ENABLE_COM_PORT_SCANNING ) {
+			startPortMonitor();
+		}
 		
 		this.atomtree.setAtom( SystemAtoms.generateJavaProperties(), "(system)" );
 		this.atomtree.setAtom( SystemAtoms.generateEnvironmentVariables(), "(system)" );
@@ -115,7 +120,6 @@ public class Star {
 	
 	private Shell buildUI() {
 		final Shell shell = new Shell( display, SWT.SHELL_TRIM );
-		shell.setText( Star.class.getSimpleName() );
 		
 		shell.setLayout( new GridLayout( 8, true ) );
 		
@@ -153,6 +157,11 @@ public class Star {
 		txtLog = new StyledText( compCenter, SWT.BORDER | SWT.H_SCROLL | SWT.V_SCROLL | SWT.MULTI | SWT.READ_ONLY );
 	    
 	    shell.pack();
+	    
+		final String strTitle = Star.class.getSimpleName() + " - " + Util.getHostIP();
+		shell.setText( strTitle );
+
+	    
 		return shell;
 	}
 
