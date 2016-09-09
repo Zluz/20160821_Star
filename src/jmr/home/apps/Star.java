@@ -80,7 +80,7 @@ public class Star {
 		
 		Relay.get();
 		
-		HttpServerAtomProducer.get().open();
+		HttpServerAtomProducer.get().doServerStart();
 		
 		// disable for now.
 //		USBDeview.initialize( 1 );

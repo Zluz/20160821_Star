@@ -2,8 +2,8 @@
   EthernetNode
 
 Compiled for UNOs
-Sketch uses 30,194 bytes (93%) of program storage space. Maximum is 32,256 bytes.
-Global variables use 597 bytes (29%) of dynamic memory, leaving 1,451 bytes for local variables. Maximum is 2,048 bytes.
+Sketch uses 30,328 bytes (94%) of program storage space. Maximum is 32,256 bytes.
+Global variables use 611 bytes (29%) of dynamic memory, leaving 1,437 bytes for local variables. Maximum is 2,048 bytes.
 
  ****************************************/
 
@@ -77,6 +77,7 @@ const static long MAX_PIN = 13; // pins 0 and 1 are reserved. 2 to 13 are usable
 // output pin modes   0=undefined, 1=read mode, 2=write digital, 3=write analog
 //                           x  x  2  3  4  5  6  7  8  9 10 11 12 13
 static byte arrPinMode[] = { 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0 };
+static byte arrPinLast[] = { 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0 };
 
 //static char arrFloatToStr[16];
 
@@ -837,7 +838,7 @@ void processRequest( EthernetClient client ) {
         client.println( F( "</tt></td></tr>" ) );
       }
       client.print( F( "<tr><td colspan='3' align='center'>Digital Inputs</td></tr>" ) );    
-      for ( int iD = 2; iD < 14; iD++ ) {
+      for ( int iD = 2; iD <= MAX_PIN; iD++ ) {
         int iValue = digitalRead( iD );
         client.print( F( "<tr><td>Digital Input" ) );
         client.print( String( iD ) );
@@ -949,6 +950,28 @@ void scheduleSend( long lTimeReference ) {
 }
 
 
+boolean hasDataChanged() {
+  
+  boolean bResult = false;
+  
+  for ( int iD = 2; iD <= MAX_PIN; iD++ ) {
+    const byte byteMode = arrPinMode[iD];
+    if ( 1==byteMode ) { // digital input
+    
+      const byte byteValue = digitalRead( iD );
+      const byte byteLast = arrPinLast[iD];
+
+      if ( byteValue != byteLast ) {
+        arrPinLast[iD] = byteValue;
+        bResult = true;
+      }    
+    }
+  }
+  return bResult;
+}
+
+
+
 void setup() {
   // put your setup code here, to run once:
   Serial.begin(9600);
@@ -967,9 +990,13 @@ void setup() {
 }
 
 
+
+
 void loop() {
   // put your main code here, to run repeatedly:
 
+
+  /* check for HTTP requests */
   EthernetClient client = server.available();
   if (client) {
     Serial.println( F("new client") );
@@ -980,10 +1007,25 @@ void loop() {
   }
 
 
-  const long lTimeNow = getSystemTime();
-  if ( (lTimeNow>0) && (lNextSend>0) && (lTimeNow>lNextSend) ) {
-    sendAtom( SEND_CODE_SCHEDULED );
-    scheduleSend( lTimeNow );
+  /* check conditions to Send to Star */
+  {
+    boolean bUpdateTime = false;
+  
+    if ( hasDataChanged() ) {
+      sendAtom( SEND_CODE_DIGITAL_CHANGE );
+      bUpdateTime = true;
+    }
+  
+    /* check to see if there is a Send scheduled */
+    const long lTimeNow = getSystemTime();
+    if ( (lTimeNow>0) && (lNextSend>0) && (lTimeNow>lNextSend) ) {
+      sendAtom( SEND_CODE_SCHEDULED );
+      bUpdateTime = true;
+    }
+    
+    if ( bUpdateTime ) {
+      scheduleSend( lTimeNow );
+    }
   }
 
   // turn off activity LED

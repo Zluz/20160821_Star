@@ -11,14 +11,32 @@ public class URLReader {
 		this.strURL = strURL;
 	}
 	
+	/**
+	 * Returns the content at the URL.
+	 * Returns NULL if there was any problem.
+	 * @return
+	 */
 	public String getContent() {
+		System.out.println( "Opening URL: " + strURL );
+		final URL url;
 		try {
-
-			System.out.println( "Opening URL: " + strURL );
-
-			final URL url = new URL( strURL );
-	        final InputStreamReader isr = new InputStreamReader(url.openStream());
-			final BufferedReader in = new BufferedReader( isr );
+			url = new URL( strURL );
+		} catch ( final MalformedURLException e ) {
+			return null;
+		}
+		final URLConnection conn;
+		try {
+			conn = url.openConnection();
+			conn.setConnectTimeout( 1000 );
+			conn.setReadTimeout( 3000 );
+		} catch ( final IOException e1) {
+			return null;
+		}
+		try ( final InputStreamReader isr = new InputStreamReader( conn.getInputStream() );
+				final BufferedReader in = new BufferedReader( isr ) ) {
+//			final URL url = new URL( strURL );
+//	        final InputStreamReader isr = new InputStreamReader(url.openStream());
+//			final BufferedReader in = new BufferedReader( isr );
 	
 			final StringBuffer strbuf = new StringBuffer();
 	        String strLine;
@@ -28,7 +46,7 @@ public class URLReader {
 	        
 	        return strbuf.toString();
 		} catch ( final Exception e ) {
-			return "";
+			return null;
 		}
 	}
 	
