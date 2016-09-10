@@ -25,12 +25,14 @@ import jmr.home.comm.HttpServerAtomProducer;
 import jmr.home.comm.InputStreamAtomProducer;
 import jmr.home.comm.SerialConnector;
 import jmr.home.comm.SerialConnector.ComBaud;
+import jmr.home.database.StarTable;
 import jmr.home.engine.Processor;
 import jmr.home.engine.Relay;
+import jmr.home.model.Star;
 import jmr.home.model.SystemAtoms;
 import jmr.util.Util;
 
-public class Star {
+public class StarApp {
 	
 	private static final String TIMESTAMP = "HH:mm:ss.SSS";
 
@@ -40,15 +42,17 @@ public class Star {
 	public final static Display display = new Display();
 	
 	private final Shell shell;
+	
+	private final Star star;
 
 	private PortTree porttree;
 	private AtomTree atomtree;
 	
-	public static Star instance;
+	public static StarApp instance;
 
 	private StyledText txtLog;
 
-	public Star() {
+	public StarApp() {
 
 		SerialConnector.initialize();
 		
@@ -74,6 +78,9 @@ public class Star {
 			startPortMonitor();
 		}
 		
+		this.star = Star.get();
+		new StarTable().write( this.star );
+		
 		this.atomtree.setAtom( SystemAtoms.generateJavaProperties(), "(system)" );
 		this.atomtree.setAtom( SystemAtoms.generateEnvironmentVariables(), "(system)" );
 		this.atomtree.setAtom( SerialConnector.getVersionInfo(), "(system)" );
@@ -94,7 +101,7 @@ public class Star {
 			public void run() {
 				try {
 					do {
-						Star.this.scanPlanets();
+						StarApp.this.scanPlanets();
 						Thread.sleep( 10000 );
 					} while ( true );
 				} catch ( final InterruptedException e ) {
@@ -158,7 +165,7 @@ public class Star {
 	    
 	    shell.pack();
 	    
-		final String strTitle = Star.class.getSimpleName() + " - " + Util.getHostIP();
+		final String strTitle = StarApp.class.getSimpleName() + " - " + Util.getHostIP();
 		shell.setText( strTitle );
 
 	    
@@ -342,7 +349,7 @@ public class Star {
 //		if (1==1) return;
 		
 		
-		final Star star = new Star();
+		final StarApp star = new StarApp();
 		star.open();
 		
 		while ( !star.getShell().isDisposed() ) {
@@ -350,7 +357,7 @@ public class Star {
 	    		display.sleep();
 	    	}
 		}
-		Star.log( "Program exiting." );
+		StarApp.log( "Program exiting." );
 //		if ( !display.isDisposed() ) {
 //			display.dispose();
 //		}

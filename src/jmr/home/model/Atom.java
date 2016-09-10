@@ -5,6 +5,7 @@ import java.util.HashMap;
 import java.util.LinkedList;
 import java.util.List;
 
+import jmr.home.apps.Planet;
 import jmr.util.Util;
 
 
@@ -12,7 +13,7 @@ public class Atom extends HashMap<String,String> implements IAtomValues {
 
 	public static enum Type { SYSTEM, STATUS, EVENT, INVOKE };
 
-	public final static int INVALID_VALUE = -1;
+//	public final static int INVALID_VALUE = -1;
 	
 	private static final long serialVersionUID = 1L;
 	
@@ -21,6 +22,10 @@ public class Atom extends HashMap<String,String> implements IAtomValues {
 	private final long lTime = System.currentTimeMillis();
 	
 	public final Type type;
+	
+	private Planet planet;
+	
+	private Long lSeq;
 	
 	/** Ordered list of keys */
 	private final List<String> listKeys = new LinkedList<String>();
@@ -50,16 +55,16 @@ public class Atom extends HashMap<String,String> implements IAtomValues {
 		return super.put(key, value);
 	}
 	
-	public int getAsInt( final String key ) {
-		if ( null==key ) return INVALID_VALUE;
-		if ( !this.containsKey( key ) ) return INVALID_VALUE;
+	public Integer getAsInt( final String key ) {
+		if ( null==key ) return null;
+		if ( !this.containsKey( key ) ) return null;
 		
 		final String strValue = this.get( key );
 		try {
 			final int iValue = Integer.parseInt( strValue );
 			return iValue;
 		} catch ( final NumberFormatException e ) {
-			return INVALID_VALUE;
+			return null;
 		}
 	}
 	
@@ -73,6 +78,26 @@ public class Atom extends HashMap<String,String> implements IAtomValues {
 	
 	public String getName() {
 		return strName;
+	}
+	
+	public void setSeq( final long lSeq ) {
+		this.lSeq = lSeq;
+	}
+	
+	public Long getSeq() {
+		return this.lSeq;
+	}
+
+	public void setPlanet( final Planet planet ) {
+		this.planet = planet;
+	}
+	
+	public Planet getPlanet() {
+		return this.planet;
+	}
+	
+	public long getTime() {
+		return this.lTime;
 	}
 	
 	public static boolean isValidString( final String str ) {

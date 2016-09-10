@@ -78,6 +78,15 @@ public class Util {
 	}
 	
 	
+	public static String truncate( 	final String strText,
+									final int iLength ) {
+		if ( null==strText ) return null;
+		final String strNew = strText.substring( 0, 
+				Math.min( strText.length(), iLength ) );
+		return strNew;
+	}
+	
+	
 	public static void main( final String[] args ) {
 //		final long lNow = (new Date()).getTime();
 //		System.out.println( lNow );

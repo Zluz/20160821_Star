@@ -4,8 +4,10 @@ import java.util.HashMap;
 import java.util.Map;
 import java.util.Map.Entry;
 
+import jmr.home.Log;
 import jmr.home.apps.AtomTree;
 import jmr.home.apps.PortTree;
+import jmr.home.database.AtomTable;
 import jmr.home.model.Atom;
 import jmr.home.model.Atom.Type;
 import jmr.home.model.IAtomConsumer;
@@ -16,6 +18,8 @@ public class Processor implements IAtomConsumer, IAtomValues {
 
 	private final PortTree porttree;
 	private final AtomTree atomtree;
+	
+	private final AtomTable tableAtom = new AtomTable();
 	
 	
 	private static Processor instance;
@@ -195,16 +199,20 @@ public class Processor implements IAtomConsumer, IAtomValues {
 	public void consume( final Atom atom ) {
 		if ( null==atom ) return;
 
+		tableAtom.write( atom );
+
 		final String strSerNo = atom.get( VAR_SERIAL_NUMBER );
 		registerContact( strSerNo );
 
-		final int iSendCode = atom.getAsInt( VAR_SEND_CODE );
+		final Integer iSendCode = atom.getAsInt( VAR_SEND_CODE );
 		
 		final int iNodeInit = SketchDefines.get( "SEND_CODE_NODE_INIT" );
 
 		
-		if ( iSendCode == iNodeInit ) {
+		if ( null!=iSendCode && iSendCode.intValue() == iNodeInit ) {
 			initializeContact( strSerNo );
+			
+			Log.log( "Initialize contact to planet.", atom );
 		}
 		
 //		final String strPort = atom.get( Atom.VAR_ORIG_PORT );
@@ -215,7 +223,7 @@ public class Processor implements IAtomConsumer, IAtomValues {
 //			}
 ////			porttree.mapConnectors.
 //		}
-	
+
 	}
 	
 	public PortTree getPortTree() {
