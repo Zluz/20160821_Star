@@ -7,6 +7,8 @@ import jmr.util.Util;
 
 public class Star {
 
+	private static final String BUILD_DATE = "09/11/2016";
+
 	private final long seq;
 	
 	private final String strHostname;
@@ -20,7 +22,7 @@ public class Star {
 	private Star() {
 		this.strHostname = Util.getHostname();
 		this.strIP = Util.getHostIP();
-		this.dateBuild = new Date( Date.parse( "09/10/2016" ) );
+		this.dateBuild = new Date( Date.parse( BUILD_DATE ) );
 		
 		this.seq = new StarTable().write( this );
 	}

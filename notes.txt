@@ -22,8 +22,9 @@ available commands (?)
 [notes - previous]
 
 arduino
-    6 analog inputs
-    14 digital I/O (3 PWM)
+	UNO
+    	6 analog inputs
+    	14 digital I/O (3 PWM)
 
 common sensors: (HT)
     ambient humidity

@@ -1,20 +1,44 @@
 package jmr.home.database;
 
+import java.beans.PropertyVetoException;
 import java.sql.Connection;
-import java.sql.DriverManager;
 import java.sql.SQLException;
 import java.sql.Statement;
+
+import com.mchange.v2.c3p0.ComboPooledDataSource;
 
 public class ConnectionProvider {
 
 	private static final String CONNECTION_STRING = 
-					"jdbc:mysql://192.168.1.210:3306/galaxy?useSSL=false";
+					"jdbc:mysql://192.168.1.200:3306/galaxy?useSSL=false";
 	
 	private static ConnectionProvider instance;
 	
-	private ConnectionProvider() {};
+	private ConnectionProvider() {
+		// see http://www.javatips.net/blog/c3p0-connection-pooling-example
+		cpds = new ComboPooledDataSource();
+       	try {
+			cpds.setDriverClass("com.mysql.jdbc.Driver");
+		} catch ( final PropertyVetoException e ) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		} //loads the jdbc driver
+       	
+//       	cpds.setJdbcUrl("jdbc:mysql://localhost/test");
+       	cpds.setJdbcUrl( CONNECTION_STRING );
+	    cpds.setUser("planet");
+	    cpds.setPassword("planet");
+	    
+//        // the settings below are optional -- c3p0 can work with defaults
+//        cpds.setMinPoolSize(5);
+//        cpds.setAcquireIncrement(5);
+//        cpds.setMaxPoolSize(20);
+//        cpds.setMaxStatements(180);
+	};
 	
-	private Connection conn;
+//	private Connection conn;
+	
+	private final ComboPooledDataSource cpds;
 	
 	public static ConnectionProvider getInstance() {
 		if ( null==instance ) {
@@ -29,18 +53,27 @@ public class ConnectionProvider {
 	}
 	
 	public static Connection get() {
-		final Connection connOriginal = getInstance().conn;
+//		final Connection connOriginal = getInstance().conn;
+//		try {
+//			if ( null==connOriginal || connOriginal.isClosed() ) {
+//		        final Connection connNew = DriverManager.getConnection(
+//		                CONNECTION_STRING, "planet", "planet" );
+//		        getInstance().conn = connNew;
+//			}
+//		} catch ( final SQLException e ) {
+//			// TODO Auto-generated catch block
+//			e.printStackTrace();
+//		}
+//		return getInstance().conn;
+		
 		try {
-			if ( null==connOriginal || connOriginal.isClosed() ) {
-		        final Connection connNew = DriverManager.getConnection(
-		                CONNECTION_STRING, "planet", "planet" );
-		        getInstance().conn = connNew;
-			}
+			final Connection conn = getInstance().cpds.getConnection();
+			return conn;
 		} catch ( final SQLException e ) {
 			// TODO Auto-generated catch block
 			e.printStackTrace();
 		}
-		return getInstance().conn;
+		return null;
 	}
 	
 	public static Statement createStatement() {

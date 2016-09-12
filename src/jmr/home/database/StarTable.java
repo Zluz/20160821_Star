@@ -23,8 +23,8 @@ public class StarTable extends BaseTable implements ITable<Star> {
 						+ "VALUES ( "
 								+ "\"" + star.getHostname() + "\", " 
 								+ "\"" + star.getIP() + "\", " 
-								+ "\"" + format( star.getStartTime() ) + "\", " 
-								+ "\"" + format( star.getBuildDate() ) + "\" )";
+								+ format( star.getStartTime() ) + ", " 
+								+ format( star.getBuildDate() ) + " )";
 				stmt.execute( strSQL, Statement.RETURN_GENERATED_KEYS );
 				final ResultSet keys = stmt.getGeneratedKeys();
 				if ( keys.next() ) {

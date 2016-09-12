@@ -11,16 +11,16 @@ public class BaseTable {
 	public static String format( final Object obj ) {
 		if ( obj instanceof Date ) {
 			final Date date = (Date)obj;
-			final String strDate = format.format( date );
+			final String strDate = "\"" + format.format( date ) + "\"";
 			return strDate;
 		} else if ( obj instanceof String ) {
 			String strWorking = obj.toString();
 			strWorking = strWorking.replaceAll( "\"", "\\\"" );
-			return strWorking;
+			return "\"" + strWorking + "\"";
 		} else if ( null!=obj ) {
-			return obj.toString(); 
+			return "\"" + obj.toString() + "\""; 
 		} else {
-			return "(null)";
+			return "null";
 		}
 	}
 	

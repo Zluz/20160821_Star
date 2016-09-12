@@ -27,6 +27,8 @@ import com.sun.net.httpserver.HttpServer;
 //import static java.nio.charset.StandardCharsets.UTF_8;
 
 import jmr.home.engine.Relay;
+import jmr.home.logging.EventType;
+import jmr.home.logging.Log;
 import jmr.home.model.Atom;
 import jmr.home.model.IAtomConsumer;
 import jmr.util.Util;
@@ -38,6 +40,8 @@ import jmr.util.Util;
 
 public class HttpServerAtomProducer implements IAtomConsumer {
 	
+	private static final String URL_TEST = "http://127.0.0.1/test";
+
 	final static private HttpServerAtomProducer 
 			instance = new HttpServerAtomProducer();
 	
@@ -116,8 +120,20 @@ public class HttpServerAtomProducer implements IAtomConsumer {
 		if ( null==server ) return;
 		
     	System.out.println( "Stopping server." );
+		Log.log( EventType.SERVICE_HTTP_STOPPING, null );
+
 		try {
 			server.stop( 0 );
+
+	    	try {
+				Thread.sleep( 500 );
+			} catch (InterruptedException e) {
+				// TODO Auto-generated catch block
+				e.printStackTrace();
+			}
+
+			Log.log( EventType.SERVICE_HTTP_STOPPED, null );
+
 		} catch ( final Exception e ) {
 			// handle it somehow?
 		}
@@ -125,7 +141,7 @@ public class HttpServerAtomProducer implements IAtomConsumer {
 	
 	
 	private boolean testServer() {
-		final String strTestURL = "http://127.0.0.1/atom";
+		final String strTestURL = URL_TEST;
 		final URLReader reader = new URLReader( strTestURL );
 		final String strContent = reader.getContent();
 		return ( null!=strContent && !strContent.isEmpty() );
@@ -135,23 +151,19 @@ public class HttpServerAtomProducer implements IAtomConsumer {
 	public boolean doServerStart() {
 	    try {
 	    	killServer();
-	    	
-	    	try {
-				Thread.sleep( 1000 );
-			} catch (InterruptedException e) {
-				// TODO Auto-generated catch block
-				e.printStackTrace();
-			}
+
+			Log.log( EventType.SERVICE_HTTP_STARTING, null );
 
 	    	System.out.print( "Starting server..." );
 			server = HttpServer.create(new InetSocketAddress( PORT_HOSTED ), 0);
 		    server.createContext("/atom", new AtomHandler());
-		    server.createContext("/info", new InfoHandler());
+		    server.createContext("/test", new TestHandler());
 		    server.createContext("/get", new GetHandler());
 		    server.setExecutor(null); // creates a default executor
 		    server.start();
 	    	System.out.println( "Done." );
 	    	bOnline = true;
+			Log.log( EventType.SERVICE_HTTP_READY, null );
 		    return true;
 		} catch ( final IOException e ) {
 			// TODO Auto-generated catch block
@@ -183,6 +195,8 @@ public class HttpServerAtomProducer implements IAtomConsumer {
 	private class AtomHandler implements HttpHandler {
 		@Override
 		public void handle( final HttpExchange exchange ) {
+			
+			Log.log( EventType.SERVICE_HTTP_HANDLE_ATOM, null );
 			
 			try {
 				iConnectionsOpen++;
@@ -265,21 +279,12 @@ public class HttpServerAtomProducer implements IAtomConsumer {
 
   public static void main(String[] args) throws Exception {
     HttpServer server = HttpServer.create(new InetSocketAddress(8000), 0);
-    server.createContext("/info", new InfoHandler());
+    server.createContext("/test", new TestHandler());
     server.createContext("/get", new GetHandler());
     server.setExecutor(null); // creates a default executor
     server.start();
   }
 
-  static class InfoHandler implements HttpHandler {
-    public void handle(HttpExchange t) throws IOException {
-      String response = "Use /get to download a PDF";
-      t.sendResponseHeaders(200, response.length());
-      OutputStream os = t.getResponseBody();
-      os.write(response.getBytes());
-      os.close();
-    }
-  }
 
   static class GetHandler implements HttpHandler {
     public void handle(HttpExchange t) throws IOException {
@@ -306,11 +311,22 @@ public class HttpServerAtomProducer implements IAtomConsumer {
   }
 
 
+  static class TestHandler implements HttpHandler {
+    public void handle( final HttpExchange t ) throws IOException {
+		final String response = "Test/Response";
+		t.sendResponseHeaders( 200, response.length() );
+		final OutputStream os = t.getResponseBody();
+		os.write(response.getBytes());
+		os.close();
+    }
+  }
+
 
 	
   @Override
   public void consume( final Atom atom ) {
 	  if ( null==atom ) return;
+
 	  
 	  final String strDestSerNo = atom.get( VAR_DEST_SERNO );
 	  final String strCommand = atom.get( VAR_COMMAND );

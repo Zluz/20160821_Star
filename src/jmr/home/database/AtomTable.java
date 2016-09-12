@@ -42,7 +42,7 @@ public class AtomTable extends BaseTable implements ITable<Atom> {
 						+ "VALUES ( "
 								+ strStar + ", " 
 								+ strPlanet + ", " 
-								+ "\"" + format( date ) + "\" )";
+								+ format( date ) + " )";
 				stmt.execute( strInsertAtom, Statement.RETURN_GENERATED_KEYS );
 				final ResultSet keys = stmt.getGeneratedKeys();
 				if ( !keys.next() ) {

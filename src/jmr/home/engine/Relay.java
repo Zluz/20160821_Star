@@ -3,6 +3,8 @@ package jmr.home.engine;
 import java.util.HashSet;
 import java.util.Set;
 
+import jmr.home.logging.EventType;
+import jmr.home.logging.Log;
 import jmr.home.model.Atom;
 import jmr.home.model.IAtomConsumer;
 import jmr.home.model.IAtomProducer;
@@ -32,7 +34,10 @@ public class Relay implements IAtomProducer, IAtomConsumer {
 
 	@Override
 	public void registerConsumer( final IAtomConsumer consumer ) {
-		setConsumers.add( consumer );
+		if ( setConsumers.add( consumer ) ) {
+			Log.log( EventType.IATOMCONSUMER_REGISTERED, 
+					"IAtomConsumer registered: " + consumer.getClass().getName() );
+		}
 	}
 
 }

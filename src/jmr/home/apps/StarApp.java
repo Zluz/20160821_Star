@@ -28,6 +28,8 @@ import jmr.home.comm.SerialConnector.ComBaud;
 import jmr.home.database.StarTable;
 import jmr.home.engine.Processor;
 import jmr.home.engine.Relay;
+import jmr.home.logging.EventType;
+import jmr.home.logging.Log;
 import jmr.home.model.Star;
 import jmr.home.model.SystemAtoms;
 import jmr.util.Util;
@@ -54,6 +56,10 @@ public class StarApp {
 
 	public StarApp() {
 
+		this.star = Star.get();
+		new StarTable().write( this.star );
+		Log.log( EventType.APP_STARTING, StarApp.class.getSimpleName() );
+
 		SerialConnector.initialize();
 		
 		this.shell = this.buildUI();
@@ -61,6 +67,7 @@ public class StarApp {
 		this.shell.addShellListener( new ShellAdapter() {
 			@Override
 			public void shellClosed( final ShellEvent e ) {
+				Log.log( EventType.APP_ENDING, StarApp.class.getSimpleName() );
 				log( "Event: Shell.shellClosed()" );
 				shell.dispose();
 				log( "Event: Shell.shellClosed() - shell disposed." );
@@ -78,8 +85,6 @@ public class StarApp {
 			startPortMonitor();
 		}
 		
-		this.star = Star.get();
-		new StarTable().write( this.star );
 		
 		this.atomtree.setAtom( SystemAtoms.generateJavaProperties(), "(system)" );
 		this.atomtree.setAtom( SystemAtoms.generateEnvironmentVariables(), "(system)" );
@@ -92,6 +97,7 @@ public class StarApp {
 		// disable for now.
 //		USBDeview.initialize( 1 );
 //		USBDeview.get().call();
+		
 	}
 	
 	

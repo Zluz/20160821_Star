@@ -4,15 +4,15 @@ import java.util.HashMap;
 import java.util.Map;
 import java.util.Map.Entry;
 
-import jmr.home.Log;
 import jmr.home.apps.AtomTree;
 import jmr.home.apps.PortTree;
 import jmr.home.database.AtomTable;
+import jmr.home.logging.EventType;
+import jmr.home.logging.Log;
 import jmr.home.model.Atom;
 import jmr.home.model.Atom.Type;
 import jmr.home.model.IAtomConsumer;
 import jmr.home.model.IAtomValues;
-import jmr.integrate.arduino.SketchDefines;
 
 public class Processor implements IAtomConsumer, IAtomValues {
 
@@ -43,7 +43,7 @@ public class Processor implements IAtomConsumer, IAtomValues {
 	}
 	
 	
-	public static final int REFRESH_INTERVAL = 6000;
+	public static final int REFRESH_INTERVAL = 60000;
 	public static final int ALLOWABLE_DELAY = 2000;
 	public static final int RULE_LOOP_INTERVAL = 200;
 	
@@ -123,6 +123,10 @@ public class Processor implements IAtomConsumer, IAtomValues {
 									System.out.print( "G" );
 								} else {
 									System.out.print( "I" );
+
+									Log.log( EventType.MISSING_SCHEDULED_COMM_FROM_PLANET, 
+																	null );
+
 									final String strSerNo = entry.getKey();
 									initializeContact( strSerNo );
 								}
@@ -144,6 +148,9 @@ public class Processor implements IAtomConsumer, IAtomValues {
 		if ( null==strSerNo ) return;
 		if ( strSerNo.isEmpty() ) return;
 		
+		Log.log( EventType.INIT_COMM_TO_PLANET, 
+					"Initialize contact to planet." );
+
 //		final long lNow = System.currentTimeMillis();
 		
 		final PlanetInfo pi = getPlanetInfo( strSerNo );
@@ -205,14 +212,19 @@ public class Processor implements IAtomConsumer, IAtomValues {
 		registerContact( strSerNo );
 
 		final Integer iSendCode = atom.getAsInt( VAR_SEND_CODE );
+		if ( null!=iSendCode ) {
+			final EventType type = EventType.getEventType(iSendCode);
+			if ( null!=type ) {
+				Log.log( type, null, atom );
+			}
+		}
 		
-		final int iNodeInit = SketchDefines.get( "SEND_CODE_NODE_INIT" );
+//		final int iNodeInit = SketchDefines.get( "SEND_CODE_NODE_INIT" );
+		final long iNodeInit = EventType.SEND_CODE_NODE_INIT.getSeq();
 
 		
 		if ( null!=iSendCode && iSendCode.intValue() == iNodeInit ) {
 			initializeContact( strSerNo );
-			
-			Log.log( "Initialize contact to planet.", atom );
 		}
 		
 //		final String strPort = atom.get( Atom.VAR_ORIG_PORT );
