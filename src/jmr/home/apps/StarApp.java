@@ -9,6 +9,8 @@ import java.util.Locale;
 import java.util.Set;
 
 import org.eclipse.swt.SWT;
+import org.eclipse.swt.custom.CTabFolder;
+import org.eclipse.swt.custom.CTabItem;
 import org.eclipse.swt.custom.StyledText;
 import org.eclipse.swt.events.ShellAdapter;
 import org.eclipse.swt.events.ShellEvent;
@@ -32,6 +34,7 @@ import jmr.home.logging.EventType;
 import jmr.home.logging.Log;
 import jmr.home.model.Star;
 import jmr.home.model.SystemAtoms;
+import jmr.home.visual.ChartLiveFeed;
 import jmr.util.Util;
 
 public class StarApp {
@@ -39,6 +42,9 @@ public class StarApp {
 	private static final String TIMESTAMP = "HH:mm:ss.SSS";
 
 	public static final boolean ENABLE_COM_PORT_SCANNING = false;
+	
+	
+	public static boolean bStopping = false;
 	
 	
 	public final static Display display = new Display();
@@ -54,6 +60,8 @@ public class StarApp {
 
 	private StyledText txtLog;
 
+	private Composite compChart;
+
 	public StarApp() {
 
 		this.star = Star.get();
@@ -68,6 +76,7 @@ public class StarApp {
 			@Override
 			public void shellClosed( final ShellEvent e ) {
 				Log.log( EventType.APP_ENDING, StarApp.class.getSimpleName() );
+				bStopping = true;
 				log( "Event: Shell.shellClosed()" );
 				shell.dispose();
 				log( "Event: Shell.shellClosed() - shell disposed." );
@@ -97,6 +106,8 @@ public class StarApp {
 		// disable for now.
 //		USBDeview.initialize( 1 );
 //		USBDeview.get().call();
+		
+		new ChartLiveFeed( compChart );
 		
 	}
 	
@@ -140,17 +151,18 @@ public class StarApp {
 		
 		final Composite compLeft = new Composite( shell, SWT.NONE );
 		final GridData gcLeft = new GridData( GridData.FILL, GridData.FILL, true, true );
-		gcLeft.horizontalSpan = 2;
+		gcLeft.horizontalSpan = 1;
 		gcLeft.heightHint = 300;
 		compLeft.setLayoutData( gcLeft );
 		compLeft.setLayout( new FillLayout() );
 		
 		final Composite compCenter = new Composite( shell, SWT.NONE );
 		final GridData gcCenter = new GridData( GridData.FILL, GridData.FILL, true, true );
-		gcCenter.horizontalSpan = 3;
+		gcCenter.horizontalSpan = 4;
 		gcCenter.widthHint = 200;
 		compCenter.setLayoutData( gcCenter );
-		compCenter.setLayout( new FillLayout() );
+//		compCenter.setLayout( new FillLayout() );
+		compCenter.setLayout( new GridLayout() );
 
 		final Composite compRight = new Composite( shell, SWT.NONE );
 		final GridData gcRight = new GridData( GridData.FILL, GridData.FILL, true, true );
@@ -167,7 +179,25 @@ public class StarApp {
 		new Processor( porttree, atomtree );
 		Relay.get().registerConsumer( Processor.getProcessor() );
 
-		txtLog = new StyledText( compCenter, SWT.BORDER | SWT.H_SCROLL | SWT.V_SCROLL | SWT.MULTI | SWT.READ_ONLY );
+		
+		final CTabFolder folder = new CTabFolder( compCenter, SWT.BORDER );
+		folder.setLayoutData( new GridData( SWT.FILL, SWT.FILL, true, true ) );
+		folder.setSimple( false );
+		folder.setUnselectedImageVisible( false );
+		folder.setUnselectedCloseVisible( false );
+		
+		txtLog = new StyledText( folder, SWT.BORDER | SWT.H_SCROLL | SWT.V_SCROLL | SWT.MULTI | SWT.READ_ONLY );
+		final CTabItem tabLog = new CTabItem( folder, SWT.CLOSE );
+		tabLog.setText( "Log" );
+		tabLog.setControl( txtLog );
+
+		compChart = new Composite( folder, SWT.NONE );
+		final CTabItem tabChart = new CTabItem( folder, SWT.CLOSE );
+		tabChart.setText( "Chart" );
+		tabChart.setControl( compChart );
+		
+		folder.setSelection( tabChart );
+
 	    
 	    shell.pack();
 	    

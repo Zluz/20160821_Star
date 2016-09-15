@@ -36,7 +36,7 @@ public class ConnectionProvider {
 //        cpds.setMaxStatements(180);
 	};
 	
-//	private Connection conn;
+	private Connection conn;
 	
 	private final ComboPooledDataSource cpds;
 	
@@ -53,27 +53,30 @@ public class ConnectionProvider {
 	}
 	
 	public static Connection get() {
-//		final Connection connOriginal = getInstance().conn;
-//		try {
-//			if ( null==connOriginal || connOriginal.isClosed() ) {
+		final Connection connOriginal = getInstance().conn;
+		try {
+			if ( null==connOriginal || connOriginal.isClosed() ) {
+				final Connection connNew = getInstance().cpds.getConnection();
+				getInstance().conn = connNew;
+			}
 //		        final Connection connNew = DriverManager.getConnection(
 //		                CONNECTION_STRING, "planet", "planet" );
 //		        getInstance().conn = connNew;
 //			}
-//		} catch ( final SQLException e ) {
-//			// TODO Auto-generated catch block
-//			e.printStackTrace();
-//		}
-//		return getInstance().conn;
-		
-		try {
-			final Connection conn = getInstance().cpds.getConnection();
-			return conn;
 		} catch ( final SQLException e ) {
 			// TODO Auto-generated catch block
 			e.printStackTrace();
 		}
-		return null;
+		return getInstance().conn;
+		
+//		try {
+//			final Connection conn = getInstance().cpds.getConnection();
+//			return conn;
+//		} catch ( final SQLException e ) {
+//			// TODO Auto-generated catch block
+//			e.printStackTrace();
+//		}
+//		return null;
 	}
 	
 	public static Statement createStatement() {

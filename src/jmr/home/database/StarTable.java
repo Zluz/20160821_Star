@@ -19,7 +19,7 @@ public class StarTable extends BaseTable implements ITable<Star> {
 //				VALUES (value1,value2,value3,...);
 				
 				final String strSQL = 
-						"INSERT INTO Star ( Hostname, IP, Start, Build) "
+						"INSERT INTO galaxy.Star ( Hostname, IP, Start, Build) "
 						+ "VALUES ( "
 								+ "\"" + star.getHostname() + "\", " 
 								+ "\"" + star.getIP() + "\", " 

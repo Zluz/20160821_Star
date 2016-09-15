@@ -63,7 +63,8 @@ public class HttpServerAtomProducer implements IAtomConsumer {
 		bOnline = false;
 		Relay.get().registerConsumer( this );
 		
-		final String strName = HttpServerAtomProducer.class.getSimpleName() + " - Server health monitor";
+		final String strName = HttpServerAtomProducer.class.getSimpleName() 
+						+ " - Server health monitor";
 		this.threadHealthMonitor = new Thread( strName ) {
 			public void run() {
 				try {
@@ -73,8 +74,12 @@ public class HttpServerAtomProducer implements IAtomConsumer {
 						if ( bOnline && (
 								( iConnectionsOpen>MAX_CONNECTIONS_OPEN )
 								|| !testServer() ) ) {
+							System.out.println( "HTTP Server must restart." );
 							bOnline = false;
-							HttpServerAtomProducer.this.doServerStart();
+							final boolean bResult = 
+									HttpServerAtomProducer.this.doServerStart();
+							System.out.println( 
+									"HTTP Server restart result: " + bResult );
 						}
 
 						
@@ -126,7 +131,7 @@ public class HttpServerAtomProducer implements IAtomConsumer {
 			server.stop( 0 );
 
 	    	try {
-				Thread.sleep( 500 );
+				Thread.sleep( 1000 );
 			} catch (InterruptedException e) {
 				// TODO Auto-generated catch block
 				e.printStackTrace();
@@ -136,6 +141,7 @@ public class HttpServerAtomProducer implements IAtomConsumer {
 
 		} catch ( final Exception e ) {
 			// handle it somehow?
+			e.printStackTrace();
 		}
 	}
 	
@@ -144,7 +150,11 @@ public class HttpServerAtomProducer implements IAtomConsumer {
 		final String strTestURL = URL_TEST;
 		final URLReader reader = new URLReader( strTestURL );
 		final String strContent = reader.getContent();
-		return ( null!=strContent && !strContent.isEmpty() );
+		final boolean bResult = ( null!=strContent && !strContent.isEmpty() );
+		if ( !bResult ) {
+			System.err.println( "HTTP Server is unresponsive. Restarting." );
+		}
+		return bResult;
 	}
 	
 	
@@ -215,13 +225,22 @@ public class HttpServerAtomProducer implements IAtomConsumer {
 					final Atom atom = new Atom(	Atom.Type.EVENT, 
 												HttpServerAtomProducer.class.getSimpleName(), 
 												Long.toString( PORT_HOSTED ) );
+//					String strAtomName = 
+//							HttpServerAtomProducer.class.getSimpleName();
 					
 					// add parameters to atom
 					final URI uri = exchange.getRequestURI();
 					final Map<String, String> map = extractParameters( uri );
 					for ( final Entry<String, String> entry : map.entrySet() ) {
-						atom.put( entry.getKey(), entry.getValue() );
+						final String strName = entry.getKey();
+						final String strValue = entry.getValue();
+						atom.put( strName, strValue );
+//						if ( VAR_SERIAL_NUMBER.equals( strName ) ) {
+//							strAtomName = strValue;
+//						}
 					}
+					
+//					atom.setName( strAtomName );
 		
 					final String strPlanetIP = addrRemote.getHostAddress();
 					atom.put( VAR_PLANET_IP, strPlanetIP );
@@ -229,6 +248,7 @@ public class HttpServerAtomProducer implements IAtomConsumer {
 					
 					final String strSerNo = atom.get( VAR_SERIAL_NUMBER );
 					if ( null!=strSerNo && !strSerNo.isEmpty() ) {
+						atom.setName( strSerNo );
 						mapPlanets.put( strSerNo, strPlanetIP );
 					}
 					
@@ -257,17 +277,40 @@ public class HttpServerAtomProducer implements IAtomConsumer {
 
 					strResponse = "Loopback test acknowledged.";
 
-					try ( final OutputStream os = exchange.getResponseBody() ) {
-						
-						exchange.sendResponseHeaders( 200, strResponse.length() );
-						os.write( strResponse.getBytes() );
-						os.close();
-						
-					} catch ( final IOException e) {
-						// TODO Auto-generated catch block
+//					try ( final OutputStream os = exchange.getResponseBody() ) {
+//						
+////						exchange.sendResponseHeaders( 200, strResponse.length() );
+////						os.write( strResponse.getBytes() );
+////						os.close();
+//						
+//					} catch ( final IOException e) {
+//						// TODO Auto-generated catch block
+//						e.printStackTrace();
+//					}
+				}
+				
+				try ( final OutputStream os = exchange.getResponseBody() ) {
+					exchange.sendResponseHeaders( 200, strResponse.length() );
+//					final OutputStream os = exchange.getResponseBody();
+					os.write(strResponse.getBytes());
+					os.close();
+				} catch ( final IOException e ) {
+//					final String strMessage = e.toString();
+					final String strMessage = e.getMessage();
+					if ( ("java.io.IOException: "
+							+ "An established connection was aborted by the "
+							+ "software in your host machine" ).equals( strMessage ) ) {
+						// ignore
+					} else if ( ( "java.io.IOException: "
+							+ "insufficient bytes written to stream" ).equals( strMessage ) ) {
+						// ignore
+					} else if ( ( "stream is closed" ).equals( strMessage ) ) {
+						// ignore
+					} else {
 						e.printStackTrace();
 					}
 				}
+				
 			} finally {
 				iConnectionsOpen--;
 			}
@@ -276,15 +319,6 @@ public class HttpServerAtomProducer implements IAtomConsumer {
 	
 	
 	
-
-  public static void main(String[] args) throws Exception {
-    HttpServer server = HttpServer.create(new InetSocketAddress(8000), 0);
-    server.createContext("/test", new TestHandler());
-    server.createContext("/get", new GetHandler());
-    server.setExecutor(null); // creates a default executor
-    server.start();
-  }
-
 
   static class GetHandler implements HttpHandler {
     public void handle(HttpExchange t) throws IOException {
@@ -338,5 +372,17 @@ public class HttpServerAtomProducer implements IAtomConsumer {
 		  reader.getContent();
 	  }
   }
+  
+
+
+  public static void main(String[] args) throws Exception {
+    HttpServer server = HttpServer.create(new InetSocketAddress(8000), 0);
+    server.createContext("/test", new TestHandler());
+    server.createContext("/get", new GetHandler());
+    server.setExecutor(null); // creates a default executor
+    server.start();
+  }
+
+  
   
 }

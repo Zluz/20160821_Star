@@ -7,5 +7,6 @@
 	<classpathentry kind="con" path="org.eclipse.jdt.USER_LIBRARY/RxTx 2.1.7 r2"/>
 	<classpathentry kind="con" path="org.eclipse.jdt.USER_LIBRARY/MySQL Connector 5.1"/>
 	<classpathentry kind="con" path="org.eclipse.jdt.USER_LIBRARY/C3p0 JDBC Resource Pools 0.9.5.2"/>
+	<classpathentry kind="con" path="org.eclipse.jdt.USER_LIBRARY/JFreeChart 1.0.19"/>
 	<classpathentry kind="output" path="bin"/>
 </classpath>

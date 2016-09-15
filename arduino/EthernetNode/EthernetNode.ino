@@ -1,12 +1,21 @@
+
+//#define DEFINE_SKETCH_BURN_SERNO
+#define DEFINE_SKETCH_NODE
+
+
+#if defined( DEFINE_SKETCH_BURN_SERNO )
+#endif
+
+
+
+
+#if defined( DEFINE_SKETCH_NODE )
 /****************************************
   EthernetNode
-
-Compiled for UNOs
-Sketch uses 30,328 bytes (94%) of program storage space. Maximum is 32,256 bytes.
-Global variables use 611 bytes (29%) of dynamic memory, leaving 1,437 bytes for local variables. Maximum is 2,048 bytes.
-
+  Compiled for UNOs
+Sketch uses 29,602 bytes (91%) of program storage space. Maximum is 32,256 bytes.
+Global variables use 621 bytes (30%) of dynamic memory, leaving 1,427 bytes for local variables. Maximum is 2,048 bytes.
  ****************************************/
-
 
 /* Included libraries */
 #include "DHT.h"
@@ -18,7 +27,7 @@ Global variables use 611 bytes (29%) of dynamic memory, leaving 1,437 bytes for 
 #include "DefineMessages.h"
 
 
-#define DEBUG // set to DEBUG to apply
+//#define DEFINE_DEBUG_DISABLED // set to DEBUG to apply
 
 
 // DHT options
@@ -28,7 +37,6 @@ Global variables use 611 bytes (29%) of dynamic memory, leaving 1,437 bytes for 
 //#define DHTTYPE DHT22   // DHT 22  (AM2302), AM2321
 //#define DHTTYPE DHT21   // DHT 21 (AM2301)
 DHT dht(DHTPIN, DHTTYPE);
-
 
 
 /* Constants */
@@ -65,9 +73,11 @@ const static byte byteActivityLED = 13;
 /* Globals */
 
 static byte macPlanet[] = { 0x00, 0x00, 0x00, 0x00, 0x00, 0x00 };
-IPAddress ipPlanet( 192,168,1,3 );
-IPAddress ipStar( 192,168,1,210 );
-static byte arrStarIP[] = { 192,168,1,210 };
+//IPAddress ipPlanet( 192,168,1,3 );
+//IPAddress ipPlanet( 192,168,1,202 );
+IPAddress ipPlanet( 127,0,0,1 );
+IPAddress ipStar( 192,168,1,200 );
+static byte arrStarIP[] = { 192,168,1,200 };
 byte byteFailedAttempts = 0;
 unsigned long lSuccessAttempts = 0;
 unsigned long lLastSendTime = 0;
@@ -109,14 +119,14 @@ unsigned long lTime;
 //}
 
 
-String printTimeValue( EthernetClient client,
-                       const unsigned long lTime ) {
-  client.print( ((float)lTime) / 1000 );
-  client.print( F(" s") );
-
-//  client.print( lTime );
-//  client.print( F(" ms") );
-}
+//String printTimeValue( EthernetClient client,
+//                       const unsigned long lTime ) {
+//  client.print( ((float)lTime) / 1000 );
+//  client.print( F(" s") );
+//
+////  client.print( lTime );
+////  client.print( F(" ms") );
+//}
 
 
 String pop( String& strSource,
@@ -170,13 +180,27 @@ long getSystemTime() {
 
 void resolveMACAddress() {
   const String strSerNo = getSerialNumber();
-  if ( strSerNo.equals( F("0105X5") ) ) {
-    const byte value[] PROGMEM = { 0xDE, 0xAD, 0xBE, 0xEF, 0xFE, 0xED };
+  if ( strSerNo.equals( F("0101X1") ) ) {
+//    const byte value[] PROGMEM = { 0x01, 0x01, 0x01, 0x01, 0x01, 0x01 };
+    const byte value[] PROGMEM = { 0xBE, 0x01, 0x01, 0x01, 0x01, 0x01 };
+    ipPlanet = IPAddress( 192,168,1,201 );
     for ( int i=0; i<6; i++ ) {
       macPlanet[i] = value[i];
     }
-  } else if ( strSerNo.equals( F("0101X1") ) ) {
-    const byte value[] PROGMEM = { 0x01, 0x01, 0x01, 0x01, 0x01, 0x01 };
+  } else if ( strSerNo.equals( F("0102X2") ) ) {
+    ipPlanet = IPAddress( 192,168,1,202 );
+    const byte mac[] PROGMEM = { 0xBE, 0xEF, 0x8F, 0xB4, 0x6B, 0x11 };
+    for ( int i=0; i<6; i++ ) {
+      macPlanet[i] = mac[i];
+    }
+  } else if ( strSerNo.equals( F("0103X3") ) ) {
+    ipPlanet = IPAddress( 192,168,1,203 );
+    const byte mac[] PROGMEM = { 0xBE, 0x01, 0x01, 0x01, 0x01, 0x03 };
+    for ( int i=0; i<6; i++ ) {
+      macPlanet[i] = mac[i];
+    }
+  } else if ( strSerNo.equals( F("0105X5") ) ) {
+    const byte value[] PROGMEM = { 0xDE, 0xAD, 0xBE, 0xEF, 0xFE, 0xED };
     for ( int i=0; i<6; i++ ) {
       macPlanet[i] = value[i];
     }
@@ -261,7 +285,7 @@ int sendAtom( int iSendCode ) {
     return MSG_SEND_FAILED_NO_STAR_HOST;
   }
   
-  Serial.println( F("--> sendAtom()") );
+//  Serial.println( F("--> sendAtom()") );
   
   // light up activity LED
   digitalWrite( byteActivityLED, HIGH );
@@ -269,13 +293,13 @@ int sendAtom( int iSendCode ) {
   // HTTP client to star host
   EthernetClient client;
 
-  Serial.println( F("    sendAtom() - connect()") );
+//  Serial.println( F("    sendAtom() - connect()") );
 
   int iResult = client.connect( ipStar, 80 );
   
   if ( iResult < 0 ) {
     String strResult = "Failed to connect, connect() response: " + String( iResult );
-    Serial.println( F("<-- sendAtom(); iResult < 0") );
+//    Serial.println( F("<-- sendAtom(); iResult < 0") );
     
     strLastFailedMessage = F("Failed to connect");
 
@@ -286,7 +310,7 @@ int sendAtom( int iSendCode ) {
     return MSG_SEND_FAILED_TO_CONNECT;
   }
   
-  Serial.println( F("    sendAtom() - testing client") );
+//  Serial.println( F("    sendAtom() - testing client") );
 
   if ( !client ) {
     byteFailedAttempts = byteFailedAttempts + 1;
@@ -299,8 +323,8 @@ int sendAtom( int iSendCode ) {
       strLastFailedMessage = F("Client is false. Not yet disabling schedule.");
     }
 
-    Serial.print( F("<-- sendAtom(); !client, byteFailedAttempts = ") );
-    Serial.println( byteFailedAttempts );
+//    Serial.print( F("<-- sendAtom(); !client, byteFailedAttempts = ") );
+//    Serial.println( byteFailedAttempts );
     
     // turn off activity LED
     digitalWrite( byteActivityLED, LOW );
@@ -309,7 +333,7 @@ int sendAtom( int iSendCode ) {
     return MSG_SEND_FAILED_NO_CLIENT;
   }
 
-  Serial.println( F("    sendAtom() - print()") );
+//  Serial.println( F("    sendAtom() - print()") );
   
   lLastSendTime = getSystemTime();
   
@@ -373,19 +397,19 @@ int sendAtom( int iSendCode ) {
   client.println( F("Connection: close") );
   client.println();
 
-  String strResponse = "[begin]";
+//  String strResponse = "[begin]";
   boolean bRead = client.available();
 //  boolean bRead = true;
   while ( bRead ) {
     const int i = client.read();
     if ( i>0 ) {
       const char c = (char) i;
-      strResponse = strResponse + String( c );
+//      strResponse = strResponse + String( c );
     } else {
       bRead = false;
     }
   }
-  strResponse = strResponse + "[end]";
+//  strResponse = strResponse + "[end]";
   
   client.stop();
   
@@ -396,8 +420,8 @@ int sendAtom( int iSendCode ) {
   digitalWrite( byteActivityLED, LOW );
 
   // return
-  String strResult = "Atom sent, response: " + strResponse;
-  Serial.println( F("<-- sendAtom(), normal") );
+//  String strResult = "Atom sent, response: " + strResponse;
+//  Serial.println( F("<-- sendAtom(), normal") );
 //  Serial.print( F("    sendAtom(), response = ") );
 //  Serial.println( strResponse );
 //  return strResult;
@@ -475,18 +499,18 @@ void processRequest( EthernetClient client ) {
       strValue = "";
     }
     
-    #if defined( DEBUG )
-      Serial.print( F("strRequest = ") );
-      Serial.println( strRequest );
-      Serial.print( F("strCommand = ") );
-      Serial.println( strCommand );
-      Serial.print( F("strParams = ") );
-      Serial.println( strParams );
-      Serial.print( F("strName = ") );
-      Serial.println( strName );
-      Serial.print( F("strValue = ") );
-      Serial.println( strValue );
-    #endif
+//    #if defined( DEFINE_DEBUG )
+//      Serial.print( F("strRequest = ") );
+//      Serial.println( strRequest );
+//      Serial.print( F("strCommand = ") );
+//      Serial.println( strCommand );
+//      Serial.print( F("strParams = ") );
+//      Serial.println( strParams );
+//      Serial.print( F("strName = ") );
+//      Serial.println( strName );
+//      Serial.print( F("strValue = ") );
+//      Serial.println( strValue );
+//    #endif
    
     /* process the changes requested */ 
     
@@ -507,6 +531,8 @@ void processRequest( EthernetClient client ) {
 //        strMessage = "host set to \"" + strStarHost + "\"";
         iMsgCode = MSG_STAR_HOSTNAME_SET;
         strMsgText = strStarHost;
+        
+        /*iMsgCode =*/ sendAtom( SEND_CODE_NODE_INIT ); //TODO add a new code
 
       } else if ( strName.equals( F("host_ip") ) ) {
 //      } else if ( strName.equals( FIELD_HOST_IP ) ) {
@@ -516,31 +542,31 @@ void processRequest( EthernetClient client ) {
         String strIP = strValue + ".";
         
 //        Serial.println( "strIP = " + strIP );
-        Serial.println( F("strIP = ") );
-        Serial.println( strIP );
+//        Serial.println( F("strIP = ") );
+//        Serial.println( strIP );
 
         String strOct1 = pop( strIP, "." );
         strOct1.trim();
-        Serial.print( F("strOct1 = ") );
-        Serial.println( strOct1 );
+//        Serial.print( F("strOct1 = ") );
+//        Serial.println( strOct1 );
         const int iOct1 = strOct1.toInt();
         
         String strOct2 = pop( strIP, "." );
         strOct2.trim();
-        Serial.print( F("strOct2 = ") );
-        Serial.println( strOct2 );
+//        Serial.print( F("strOct2 = ") );
+//        Serial.println( strOct2 );
         const int iOct2 = strOct2.toInt();
         
         String strOct3 = pop( strIP, "." );
         strOct3.trim();
-        Serial.print( F("strOct3 = ") );
-        Serial.println( strOct3 );
+//        Serial.print( F("strOct3 = ") );
+//        Serial.println( strOct3 );
         const int iOct3 = strOct3.toInt();
         
         String strOct4 = pop( strIP, "." );
         strOct4.trim();
-        Serial.print( F("strOct4 = ") );
-        Serial.println( strOct4 );
+//        Serial.print( F("strOct4 = ") );
+//        Serial.println( strOct4 );
         const int iOct4 = strOct4.toInt();
         
         arrStarIP[0] = iOct1;
@@ -615,7 +641,7 @@ void processRequest( EthernetClient client ) {
     } else if ( strCommand.equals( F("/send") ) ) {
 //    } else if ( strCommand.equals( OP_SEND ) ) {
 
-      Serial.println( F("(request to send atom)") );
+//      Serial.println( F("(request to send atom)") );
       
       iMsgCode = sendAtom( SEND_CODE_REQUESTED );
       //strMsgText = "";
@@ -704,7 +730,7 @@ void processRequest( EthernetClient client ) {
     } else if ( strCommand.equals( F("/read") ) ) {
 //    } else if ( strCommand.equals( String( OP_READ ) ) ) {
 
-      Serial.println( F("(command is to read)") );
+//      Serial.println( F("(command is to read)") );
 
 //      strMessage = F("Read request recognized.");
       iMsgCode = MSG_OP_READ_SUCCESS;
@@ -712,7 +738,7 @@ void processRequest( EthernetClient client ) {
       
     } else {
 
-      Serial.println( F("(command is unknown)") );
+//      Serial.println( F("(command is unknown)") );
       
 //      strMessage = "Unknown command: \"" + strCommand + "\".";
 //      strMessage = "Unknown command: \"" + strCommand + "\", available commands:\n";
@@ -753,17 +779,14 @@ void processRequest( EthernetClient client ) {
 //      client.println( F("<!DOCTYPE HTML>" ) );
 //      client.println( F("<html>" ) );
       
-      client.println( F("<font face='verdana'>" ) );
-      client.println( F("<table border='1' cellpadding='4'>" ) );
+      client.println( F("<font face='verdana'><table border='1' cellpadding='4'>" ) );
       
       printSection( client, F("Configuration") );
       printNameValue( client, F("Serial Number"), getSerialNumber() );
       
   //    printNameValue( client, F("MAC Address"), getMACAddress() );
       // print mac address
-      client.print( F( "<tr><td colspan='2'>" ) );
-      client.print( F("MAC Address") );
-      client.print( F( "</td><td><tt>" ) );
+      client.print( F( "<tr><td colspan='2'>MAC Address</td><td><tt>" ) );
       printMACAddress( client );
       client.print( F( "</tt></td></tr>" ) );    
   
@@ -816,9 +839,7 @@ void processRequest( EthernetClient client ) {
       
       printSection( client, F("Results") );
   //    printNameValue( client, F("strMessage"), strMessage );
-      client.print( F( "<tr><td>" ) );
-      client.print( F("Message") );
-      client.println( F( "</td><td>" ) );
+      client.print( F( "<tr><td>Message</td><td>" ) );
       client.println( String( iMsgCode ) );
       client.println( F( "</td><td>" ) );
       client.println( strMsgText );
@@ -916,7 +937,7 @@ void sendDataJSONResponse( EthernetClient client ) {
     client.println( F( "{" ) );    
     for ( int iA = 0; iA < 6; iA++ ) {
       int iValue = analogRead( iA );
-      client.print( F( "  \"A" ) );
+      client.print( F( " \"A" ) );
       client.print( String( iA ) );
       client.print( F( "\": " ) );
       client.print( String( iValue ) );
@@ -924,7 +945,7 @@ void sendDataJSONResponse( EthernetClient client ) {
     }
     for ( int iD = 2; iD < 14; iD++ ) {
       int iValue = digitalRead( iD );
-      client.print( F( "  \"D" ) );
+      client.print( F( " \"D" ) );
       client.print( String( iD ) );
       client.print( F( "\": " ) );
       client.print( String( iValue ) );
@@ -982,6 +1003,8 @@ void setup() {
 
   resolveMACAddress();
   Ethernet.begin( macPlanet, ipPlanet );
+//  Ethernet.begin( macPlanet );
+  
   server.begin();
   Serial.print( F("server is ") );
   Serial.println( Ethernet.localIP() );
@@ -991,19 +1014,25 @@ void setup() {
 
 
 
+long lCounter = 0;
 
 void loop() {
   // put your main code here, to run repeatedly:
 
+  lCounter = lCounter + 1;
 
   /* check for HTTP requests */
   EthernetClient client = server.available();
   if (client) {
-    Serial.println( F("new client") );
+//    Serial.println( F("new client") );
     
     processRequest( client );
     delay(1);
     client.stop();
+  }
+  
+  if ( 0==(lCounter % 1000) ) {
+//    Ethernet.maintain(); // do NOT use DHCP: not enough room for program
   }
 
 
@@ -1031,3 +1060,5 @@ void loop() {
   // turn off activity LED
   digitalWrite( byteActivityLED, LOW );
 }
+
+#endif

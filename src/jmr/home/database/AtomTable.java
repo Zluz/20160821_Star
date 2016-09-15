@@ -38,7 +38,7 @@ public class AtomTable extends BaseTable implements ITable<Atom> {
 				
 				final Date date = new Date( atom.getTime() );
 				final String strInsertAtom = 
-						"INSERT INTO Atom ( seq_Star, seq_Planet, Created ) "
+						"INSERT INTO galaxy.Atom ( seq_Star, seq_Planet, Created ) "
 						+ "VALUES ( "
 								+ strStar + ", " 
 								+ strPlanet + ", " 
@@ -51,7 +51,7 @@ public class AtomTable extends BaseTable implements ITable<Atom> {
 				final long lSeqAtom = keys.getLong(1);
 				
 				String strInsertLines = 
-						"INSERT INTO Line "
+						"INSERT INTO galaxy.Line "
 								+ "( seq_Atom, Name, ValueText, Value, ValueInt ) "
 								+ " VALUES ";
 				boolean bFirst = true;

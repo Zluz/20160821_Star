@@ -3,7 +3,10 @@ package jmr.home.database;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.sql.Statement;
+import java.util.Date;
 import java.util.HashMap;
+
+import jmr.home.model.Star;
 
 public class ConfigTable 
 				extends HashMap<String,String> 
@@ -31,6 +34,39 @@ public class ConfigTable
 		return null;
 	}
 
+	@Override
+	public String put(	final String key, 
+						final String value ) {
+		try ( final Statement stmt = ConnectionProvider.createStatement() ) {
+			if ( null!=stmt ) {
+				
+//				INSERT INTO table_name (column1,column2,column3,...)
+//				VALUES (value1,value2,value3,...);
+				
+				final String strSQL = "INSERT INTO galaxy.Config "
+						+ "( Date, Name, Value, seq_Star ) "
+//						+ "( Date, Name, Value ) "
+						+ "VALUES ( "
+							+ BaseTable.format( new Date() ) + ", "
+							+ "\"" + key + "\", "
+							+ "\"" + value + "\", "
+							+ Star.get().getSeq() + " );";
+				stmt.execute( strSQL, Statement.RETURN_GENERATED_KEYS );
+//				final ResultSet keys = stmt.getGeneratedKeys();
+//				if ( keys.next() ) {
+//					final long lSeq = keys.getLong(1);
+//					return lSeq;
+//				}
+			}
+		} catch ( final SQLException e ) {
+			e.printStackTrace();
+		}
+		
+		final String strResult = super.put(key, value);
+		return strResult;
+	}
+	
+	
 	public static ConfigTable get() {
 		if ( null==instance ) {
 			instance = new ConfigTable();
@@ -45,13 +81,13 @@ public class ConfigTable
 //				INSERT INTO table_name (column1,column2,column3,...)
 //				VALUES (value1,value2,value3,...);
 				
-				final String strSQL = "SELECT Name, Value FROM Config;";
+				final String strSQL = "SELECT Name, Value FROM galaxy.Config;";
 				final ResultSet rs = stmt.executeQuery( strSQL );
-				while ( rs.next() ) {
+				while ( rs.next() && !rs.isAfterLast() ) {
 					final String strName = rs.getString( 1 );
 					final String strValue = rs.getString( 2 );
-//					this.map.put( strName, strValue );
-					this.put( strName, strValue );
+//					this.put( strName, strValue );
+					super.put( strName, strValue );
 				}
 			}
 		} catch ( final SQLException e ) {

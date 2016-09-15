@@ -7,12 +7,14 @@ import java.util.Map.Entry;
 import jmr.home.apps.AtomTree;
 import jmr.home.apps.PortTree;
 import jmr.home.database.AtomTable;
+import jmr.home.database.ConfigTable;
 import jmr.home.logging.EventType;
 import jmr.home.logging.Log;
 import jmr.home.model.Atom;
 import jmr.home.model.Atom.Type;
 import jmr.home.model.IAtomConsumer;
 import jmr.home.model.IAtomValues;
+import jmr.util.Util;
 
 public class Processor implements IAtomConsumer, IAtomValues {
 
@@ -25,6 +27,11 @@ public class Processor implements IAtomConsumer, IAtomValues {
 	private static Processor instance;
 	
 	private final Thread threadRunRules;
+
+	public static final String KEY_HOST_IP = "host_ip";
+
+	private Boolean bPrimaryStarHere = null;
+	
 	
 	public Processor(	final PortTree porttree,
 						final AtomTree atomtree ) {
@@ -43,7 +50,7 @@ public class Processor implements IAtomConsumer, IAtomValues {
 	}
 	
 	
-	public static final int REFRESH_INTERVAL = 60000;
+	public static final int REFRESH_INTERVAL = 4000;
 	public static final int ALLOWABLE_DELAY = 2000;
 	public static final int RULE_LOOP_INTERVAL = 200;
 	
@@ -79,7 +86,16 @@ public class Processor implements IAtomConsumer, IAtomValues {
 			return piNew;
 		}
 	}
-
+	
+	
+	public boolean isPrimaryStarHere() {
+		if ( null==bPrimaryStarHere ) {
+			final String strConfigHostIP = ConfigTable.get().get( KEY_HOST_IP );
+			final String strThisHostIP = Util.getHostIP();
+			bPrimaryStarHere = strThisHostIP.equals( strConfigHostIP );
+		}
+		return bPrimaryStarHere.booleanValue();
+	}
 	
 	
 	private void registerContact( final String strSerNo ) {
@@ -174,23 +190,38 @@ public class Processor implements IAtomConsumer, IAtomValues {
 			@Override
 			public void run() {
 				try {
+
 					String strCommand; 
 
-					final Atom atomSetTime = 
-							new Atom( Type.INVOKE, "Set Time", null );
-					atomSetTime.put( VAR_DEST_SERNO, strSerNo );
-					strCommand = "/set/time=" + System.currentTimeMillis();
-					atomSetTime.put( VAR_COMMAND, strCommand );
-					Relay.get().consume( atomSetTime );
-					
-					Thread.sleep( 1000 );
+					if ( isPrimaryStarHere() ) {
+	
+						final Atom atomSetTime = 
+								new Atom( Type.INVOKE, "Set Time", null );
+						atomSetTime.put( VAR_DEST_SERNO, strSerNo );
+						strCommand = "/set/time=" + System.currentTimeMillis();
+						atomSetTime.put( VAR_COMMAND, strCommand );
+						Relay.get().consume( atomSetTime );
+						
+						Thread.sleep( 1000 );
+	
+						final Atom atomSetSchedule = 
+								new Atom( Type.INVOKE, "Set Interval", null );
+						atomSetSchedule.put( VAR_DEST_SERNO, strSerNo );
+						strCommand = "/set/interval=" + REFRESH_INTERVAL;
+						atomSetSchedule.put( VAR_COMMAND, strCommand );
+						Relay.get().consume( atomSetSchedule );
 
-					final Atom atomSetSchedule = 
-							new Atom( Type.INVOKE, "Set Interval", null );
-					atomSetSchedule.put( VAR_DEST_SERNO, strSerNo );
-					strCommand = "/set/interval=" + REFRESH_INTERVAL;
-					atomSetSchedule.put( VAR_COMMAND, strCommand );
-					Relay.get().consume( atomSetSchedule );
+					} else {
+
+						final Atom atomRedirect = 
+								new Atom( Type.INVOKE, "Redirect Host", null );
+						atomRedirect.put( VAR_DEST_SERNO, strSerNo );
+						strCommand = "/set/host_ip=" 
+									+ ConfigTable.get().get( KEY_HOST_IP );
+						atomRedirect.put( VAR_COMMAND, strCommand );
+						Relay.get().consume( atomRedirect );
+
+					}
 
 				} catch ( final InterruptedException e ) {
 					// just ignore
