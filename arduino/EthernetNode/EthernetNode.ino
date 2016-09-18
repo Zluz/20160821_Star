@@ -1,21 +1,20 @@
-
-//#define DEFINE_SKETCH_BURN_SERNO
-#define DEFINE_SKETCH_NODE
-
-
-#if defined( DEFINE_SKETCH_BURN_SERNO )
-#endif
-
-
-
-
-#if defined( DEFINE_SKETCH_NODE )
 /****************************************
   EthernetNode
-  Compiled for UNOs
+  
+  Arduino UNO
 Sketch uses 29,602 bytes (91%) of program storage space. Maximum is 32,256 bytes.
 Global variables use 621 bytes (30%) of dynamic memory, leaving 1,427 bytes for local variables. Maximum is 2,048 bytes.
+
+  Arduino Mega 2560
+Sketch uses 46,934 bytes (18%) of program storage space. Maximum is 253,952 bytes.
+Global variables use 1,586 bytes (19%) of dynamic memory, leaving 6,606 bytes for local variables. Maximum is 8,192 bytes.
+
  ****************************************/
+
+/* Select device. UNO program must fit in space. MEGA adds SD card support. */
+//#define DEFINE_DEVICE_UNO
+#define DEFINE_DEVICE_MEGA
+
 
 /* Included libraries */
 #include "DHT.h"
@@ -26,22 +25,37 @@ Global variables use 621 bytes (30%) of dynamic memory, leaving 1,427 bytes for 
 #include "Arduino.h"
 #include "DefineMessages.h"
 
+#if defined( DEFINE_DEVICE_MEGA )
+#include <SD.h>
+#endif
+
 
 //#define DEFINE_DEBUG_DISABLED // set to DEBUG to apply
 
 
 // DHT options
-#define DHTPIN 2     // what digital pin we're connected to
-// Uncomment whatever type you're using!
-#define DHTTYPE DHT11   // DHT 11
-//#define DHTTYPE DHT22   // DHT 22  (AM2302), AM2321
-//#define DHTTYPE DHT21   // DHT 21 (AM2301)
-DHT dht(DHTPIN, DHTTYPE);
+#define PIN_DHT 2     // what digital pin we're connected to
+#define DHT_TYPE DHT11   // DHT 11
+DHT dht( PIN_DHT, DHT_TYPE );
+
+// SD card options
+#define PIN_SD 4
+
+const static byte byteActivityLED = 13;
+
+//long FILE_LOG_VIEW_SIZE = 262144; // 256 K
+long FILE_LOG_VIEW_SIZE = 4096; // 4 K
+
+//const static long MANDATORY_UPTIME_REBOOT = 86400000; // milliseconds in a day
+const static long MANDATORY_UPTIME_REBOOT = 3600000; // hour, 3600s/hr
+
 
 
 /* Constants */
 
-const static String VERSION        = "20160907_001";
+const static String VERSION  = "20160917_001";
+const static char* FILE_LOG  = "ARDUINO/ARDUINO.LOG";
+static char* SD_DIRS = "ARDUINO/CONFIG/";
 //const static String COMMA          PROGMEM = ", ";
 //const static String OP_SET         PROGMEM = "/set";
 //const static String OP_SEND        PROGMEM = "/send";
@@ -64,8 +78,6 @@ const static String VERSION        = "20160907_001";
 //const static char FIELD_INTERVAL[] PROGMEM = {"interval"};
 //const static char FIELD_TIME[] PROGMEM = {"time"};
 
-
-const static byte byteActivityLED = 13;
 
 
 
@@ -101,6 +113,16 @@ EthernetServer server(80);
 
 unsigned long lTime;
 
+////char* cTimestamp = malloc( 9 );
+//char cTimestamp[20];
+////char* cFilename = "1234567890123456789012345678901234567890";
+//char cFilename[80];
+
+const static long BUFFER_SIZE = 80;
+static char cStringBuffer[ BUFFER_SIZE ];
+
+//File fileLog;
+
 
 
 
@@ -127,6 +149,140 @@ unsigned long lTime;
 ////  client.print( lTime );
 ////  client.print( F(" ms") );
 //}
+
+
+String formatTimeValue( const unsigned long lTime ) {
+  String strText;
+  long lBig = lTime / 1000;
+  long lSmall = lTime % 1000;
+  sprintf( cStringBuffer, "%05u", lBig );
+  strText = String( cStringBuffer ) + F(".");
+  sprintf( cStringBuffer, "%03u", lSmall );
+  strText = strText + String( cStringBuffer );
+
+  return strText;
+}
+
+void log( const String strText ) {
+#if defined( DEFINE_DEVICE_MEGA )
+  File fileLog = SD.open( FILE_LOG, FILE_WRITE );
+  if ( fileLog ) {
+    
+    // 86400000
+    // 12345678
+//    sprintf( cTimestamp, "%08u", millis() );
+
+    long lTime = millis();
+    long lBig = lTime / 1000;
+    long lSmall = lTime % 1000;
+    sprintf( cStringBuffer, "%05u", lBig );
+    fileLog.print( cStringBuffer );
+    fileLog.print( F(".") );
+    sprintf( cStringBuffer, "%03u", lSmall );
+    fileLog.print( cStringBuffer );
+ 
+//    fileLog.print( cTimestamp );
+//    fileLog.print( formatTimeValue( millis() ) );
+    
+    fileLog.print( F(" ") );
+    fileLog.println( strText );
+    fileLog.close();
+  }
+#endif
+  Serial.print( F( "log> " ) );
+  Serial.println( strText );
+}
+
+
+void saveConfig( String strName,
+                 String strValue ) {
+#if defined( DEFINE_DEVICE_MEGA )
+  log( "Saving config: \"" + strName + "\" = \"" + strValue + "\"" );
+  
+  strName.toUpperCase();
+  
+//  String strFilename = "ARDUINO/CONFIG/" + strName + ".CFG";
+  String strFilename = "ARDUINO/" + strName + ".CFG";
+//  String strFilename = strName + ".CFG";
+
+  char cFilename[strFilename.length()+1];
+  strFilename.toCharArray( cFilename, sizeof(cFilename) );
+
+//  log( "Config filename: \"" + String( cFilename ) + "\"" );
+  
+  if ( SD.exists( cFilename ) ) {
+//    log( F("Config file already exists. Deleting.") );
+    SD.remove( cFilename );
+//    delay( 100 );
+  }
+  File fileConfig = SD.open( cFilename, FILE_WRITE );
+//  File fileConfig = SD.open( strFilename, O_WRITE | O_CREAT | O_TRUNC );
+  if ( fileConfig ) {
+//    log( F("Created, writing data") );
+    fileConfig.println( strValue );
+    fileConfig.close();
+//    log( F("File complete") );
+//  } else {
+//    log( F("Failed to save configuration") );
+  }
+  
+//  if ( SD.exists( cFilename ) ) {
+//    log( F("Config file created") );
+//  } else {
+//    log( F("Config file NOT created") );
+//  }
+
+#endif  
+}
+
+String readConfig( String strName,
+                   String strDefault ) {
+#if defined( DEFINE_DEVICE_MEGA )
+
+  log( "Reading config: \"" + strName + "\"  (default:\"" + strDefault + "\")" );
+
+  strName.toUpperCase();
+
+//  String strFilename = "ARDUINO/CONFIG/" + strName + ".CFG";
+  String strFilename = "ARDUINO/" + strName + ".CFG";
+//  String strFilename = strName + ".CFG";
+  char cFilename[strFilename.length()+1];
+//  strFilename.toCharArray( cStringBuffer, sizeof(cStringBuffer) );
+  strFilename.toCharArray( cFilename, sizeof(cFilename) );
+  
+  if ( SD.exists( cFilename ) ) {
+    File fileConfig = SD.open( cFilename, FILE_READ );
+    String strValue = "";
+    if ( fileConfig ) {
+  
+      boolean bScan = fileConfig.available();
+      char c;
+      while ( bScan ) {
+        c = fileConfig.read();
+        if ( '\n'==c ) {
+          bScan = false;
+        } else {
+          strValue = strValue + c;
+          bScan = fileConfig.available();
+        }
+      }
+      fileConfig.close();
+  
+      log( "Loaded config: \"" + strName + "\" = \"" + strValue + "\"" );
+      
+      return strValue;
+    } else {
+      log( "Using default, unable to open file: " + String( cFilename ) );
+      return strDefault;
+    }
+  } else {
+    log( "Using default, file not found: " + String( cFilename ) );
+    return strDefault;
+  }
+#else
+  return strDefault;
+#endif  
+}
 
 
 String pop( String& strSource,
@@ -167,6 +323,19 @@ void printStarIP( EthernetClient client ) {
 }
 
 
+String formatIP( IPAddress address ) {
+  String strResult = F("( ");
+  for ( int i=0; i<4; i++ ) {
+    if ( i>0 ) {
+      strResult = strResult + F(".");
+    }
+    strResult = strResult + String( address[i] );
+  }
+  strResult = strResult + F(" )");
+  return strResult;
+}
+
+
 
 
 long getSystemTime() {
@@ -201,6 +370,18 @@ void resolveMACAddress() {
     }
   } else if ( strSerNo.equals( F("0105X5") ) ) {
     const byte value[] PROGMEM = { 0xDE, 0xAD, 0xBE, 0xEF, 0xFE, 0xED };
+    for ( int i=0; i<6; i++ ) {
+      macPlanet[i] = value[i];
+    }
+  } else if ( strSerNo.equals( F("102008") ) ) {
+    ipPlanet = IPAddress( 192,168,1,208 );
+    const byte value[] PROGMEM = { 0xBE, 0x01, 0x01, 0x01, 0x01, 0x08 };
+    for ( int i=0; i<6; i++ ) {
+      macPlanet[i] = value[i];
+    }
+  } else if ( strSerNo.equals( F("102009") ) ) {
+    ipPlanet = IPAddress( 192,168,1,209 );
+    const byte value[] PROGMEM = { 0xBE, 0x01, 0x01, 0x01, 0x01, 0x09 };
     for ( int i=0; i<6; i++ ) {
       macPlanet[i] = value[i];
     }
@@ -273,15 +454,22 @@ int freeRam() {
 }
 
 
-
+void reboot() {
+  log( F("reboot requested") );
+  delay( 1000 );
+  asm volatile( "jmp 0" );
+}
 
 
 int sendAtom( int iSendCode ) {
+  log( F("--> sendAtom()") );
+  
   if ( 0==arrStarIP[0] ) {
     lNextSend = 0;
     iInterval = 0;
 
 //    return F("Star host IP not set");
+    log( F("<-- sendAtom(), no star host") );
     return MSG_SEND_FAILED_NO_STAR_HOST;
   }
   
@@ -307,6 +495,7 @@ int sendAtom( int iSendCode ) {
     digitalWrite( byteActivityLED, LOW );
     // return
 //    return strResult;
+    log( F("<-- sendAtom(), failed to connect") );
     return MSG_SEND_FAILED_TO_CONNECT;
   }
   
@@ -330,6 +519,7 @@ int sendAtom( int iSendCode ) {
     digitalWrite( byteActivityLED, LOW );
     // return
 //    return F( "Client is false." );
+    log( F("<-- sendAtom(), no client") );
     return MSG_SEND_FAILED_NO_CLIENT;
   }
 
@@ -425,108 +615,37 @@ int sendAtom( int iSendCode ) {
 //  Serial.print( F("    sendAtom(), response = ") );
 //  Serial.println( strResponse );
 //  return strResult;
+  log( F("<-- sendAtom(), success") );
   return MSG_SEND_SUCCESS;
 }
 
 
+int processRequestSet( String strName,
+                       String strValue,
+                       boolean bAllowSave ) {
+
+  log( "Request to set: " + strName + " to " + strValue );                         
+                         
 
 
-
-
-void processRequest( EthernetClient client ) {
-  if ( !client.connected() ) return;
-
-    /* pull the request from the stream */
-    
-    // light up activity LED
-    digitalWrite( byteActivityLED, HIGH );
-
-    String strRequest;
-    boolean bRead = true;
-    while ( bRead ) {
-
-      if ( client.available() ) {
-        const int i = client.read();
-        if ( -1==i ) {
-          bRead = false;
-        } else {
-          char c = (char) i;
-          strRequest = strRequest + c;
-        }
-      }
-      
-      if ( strRequest.indexOf( F("HTTP") )>-1 ) {
-        bRead = false;
-      }
-    }
-
-    // turn off activity LED
-    digitalWrite( byteActivityLED, LOW );
-    
-    /* extract info the request */
-    
-    const String strOriginal = strRequest;
-    
-    String strTemp;
-    
-    pop( strRequest, " " );
-    strRequest = pop( strRequest, "HTTP" );
-    strRequest.trim();
-    
-    String strCommand = strRequest + "/";
-    const int iPosQMark = strCommand.indexOf( F("?") );
-    const int iPosSlash = strCommand.indexOf( F("/"), 2 );
-    if ( iPosQMark<0 || iPosQMark>iPosSlash ) {
-      strCommand = strCommand.substring( 0, iPosSlash );
-    } else {
-      strTemp = strCommand;
-      strCommand = pop( strTemp, "?" );
-    }
-    strCommand.toLowerCase();
-    
-    String strParams = strRequest;
-    strParams = strParams.substring( strCommand.length() + 1 );
-
-    String strName = strParams;
-    strTemp = strName;
-    strName = pop( strTemp, F("=") );
-    strName.toLowerCase();
-    
-    String strValue = strParams;
-    if ( strValue.indexOf( F("=") )>-1 ) {
-      pop( strValue, "=" );
-    } else {
-      strValue = "";
-    }
-    
-//    #if defined( DEFINE_DEBUG )
-//      Serial.print( F("strRequest = ") );
-//      Serial.println( strRequest );
-//      Serial.print( F("strCommand = ") );
-//      Serial.println( strCommand );
-//      Serial.print( F("strParams = ") );
-//      Serial.println( strParams );
-//      Serial.print( F("strName = ") );
-//      Serial.println( strName );
-//      Serial.print( F("strValue = ") );
-//      Serial.println( strValue );
-//    #endif
-   
-    /* process the changes requested */ 
-    
 //    String strMessage = F("(no message)");
     String strMsgText = "";
     int iMsgCode = 0;
-    boolean bSendFullResponse = true;
+//    boolean bSendFullResponse = true;
+//    int iResponseMessageFormat = 2; // 1 = brief, 2 = full, 3 = showlog
    
-    if ( strCommand.equals( F("/set") ) ) {
-//    if ( strCommand.equals( OP_SET ) ) {
-      
+  
+  
+  
 //      Serial.println( "(command is to set)" );
 
       if ( strName.equals( F("hostname") ) ) {
 //      if ( strName.equals( FIELD_HOSTNAME ) ) {
-        
+
+        if ( bAllowSave ) {
+          saveConfig( "hostname", strValue );
+        }
+
         strStarHost = strValue;
 //        strMessage = "host set to \"" + strStarHost + "\"";
         iMsgCode = MSG_STAR_HOSTNAME_SET;
@@ -535,6 +654,10 @@ void processRequest( EthernetClient client ) {
         /*iMsgCode =*/ sendAtom( SEND_CODE_NODE_INIT ); //TODO add a new code
 
       } else if ( strName.equals( F("host_ip") ) ) {
+        
+        if ( bAllowSave ) {
+          saveConfig( "host_ip", strValue );
+        }
 //      } else if ( strName.equals( FIELD_HOST_IP ) ) {
 
 //        Serial.println( "(config value is host_ip)" );
@@ -584,7 +707,11 @@ void processRequest( EthernetClient client ) {
         
       } else if ( strName.equals( F("interval") ) ) {
 //      } else if ( strName.equals( FIELD_INTERVAL ) ) {
-        
+
+        if ( bAllowSave ) {
+          saveConfig( "interval", strValue );
+        }
+
         String strInterval = strValue;
         strInterval.trim();
         int iValue = strInterval.toInt();
@@ -637,23 +764,135 @@ void processRequest( EthernetClient client ) {
         iMsgCode = MSG_INVALID_VARIABLE;
         strMsgText = strName;
       }
+
+
+  return iMsgCode;
+}
+
+
+
+int processRequest( EthernetClient client ) {
+  if ( !client.connected() ) return ERR_CLIENT_NOT_CONNECTED;
+
+    /* pull the request from the stream */
+    
+    // light up activity LED
+    digitalWrite( byteActivityLED, HIGH );
+
+    String strRequest;
+    boolean bRead = true;
+    while ( bRead ) {
+
+      if ( client.available() ) {
+        const int i = client.read();
+        if ( -1==i ) {
+          bRead = false;
+        } else {
+          char c = (char) i;
+          strRequest = strRequest + c;
+        }
+      }
+      
+      if ( strRequest.indexOf( F("HTTP") )>-1 ) {
+        bRead = false;
+      }
+    }
+
+    // turn off activity LED
+    digitalWrite( byteActivityLED, LOW );
+    
+    /* extract info the request */
+    
+    const String strOriginal = strRequest;
+    
+    String strTemp;
+    
+    pop( strRequest, " " );
+    strRequest = pop( strRequest, "HTTP" );
+    strRequest.trim();
+
+    log( "Incoming request: " + strRequest );
+    
+    String strCommand = strRequest + "/";
+    const int iPosQMark = strCommand.indexOf( F("?") );
+    const int iPosSlash = strCommand.indexOf( F("/"), 2 );
+    if ( iPosQMark<0 || iPosQMark>iPosSlash ) {
+      strCommand = strCommand.substring( 0, iPosSlash );
+    } else {
+      strTemp = strCommand;
+      strCommand = pop( strTemp, "?" );
+    }
+    strCommand.toLowerCase();
+    
+    String strParams = strRequest;
+    strParams = strParams.substring( strCommand.length() + 1 );
+
+    String strName = strParams;
+    strTemp = strName;
+    strName = pop( strTemp, F("=") );
+    strName.toLowerCase();
+    
+    String strValue = strParams;
+    if ( strValue.indexOf( F("=") )>-1 ) {
+      pop( strValue, "=" );
+    } else {
+      strValue = "";
+    }
+    
+//    #if defined( DEFINE_DEBUG )
+//      Serial.print( F("strRequest = ") );
+//      Serial.println( strRequest );
+//      Serial.print( F("strCommand = ") );
+//      Serial.println( strCommand );
+//      Serial.print( F("strParams = ") );
+//      Serial.println( strParams );
+//      Serial.print( F("strName = ") );
+//      Serial.println( strName );
+//      Serial.print( F("strValue = ") );
+//      Serial.println( strValue );
+//    #endif
+
+   
+    /* process the changes requested */ 
+    
+//    String strMessage = F("(no message)");
+    String strMsgText = "";
+    int iMsgCode = 0;
+//    boolean bSendFullResponse = true;
+    int iResponseMessageFormat = 2; // 1 = brief, 2 = full, 3 = showlog
+   
+    if ( strCommand.equals( F("/set") ) ) {
+//    if ( strCommand.equals( OP_SET ) ) {
+
+  
+      log( F("Command: set") );
+      
+      
+      iMsgCode = processRequestSet( strName, strValue, true );
+      
+      
+      
       
     } else if ( strCommand.equals( F("/send") ) ) {
 //    } else if ( strCommand.equals( OP_SEND ) ) {
 
+      log( F("Command: send") );
+  
 //      Serial.println( F("(request to send atom)") );
       
       iMsgCode = sendAtom( SEND_CODE_REQUESTED );
       //strMsgText = "";
 
       if ( strName.equals( "fast" ) ) {
-        bSendFullResponse = false;
+        iResponseMessageFormat = 1;
       }
 
 //      strMessage = "Request to send atom, result: " + strResult;
 //      strMsgText = strResult;
 
     } else if ( strCommand.equals( F("/mode") ) ) {
+
+      log( F("Command: mode") );
 
       const long lPin = strName.toInt();
       if ( lPin>1 && lPin<=MAX_PIN ) {
@@ -684,6 +923,8 @@ void processRequest( EthernetClient client ) {
             
     } else if ( strCommand.equals( F("/write") ) ) {
 //    } else if ( strCommand.equals( OP_WRITE ) ) {
+
+      log( F("Command: write") );
 
       const long lPin = strName.toInt();
       if ( lPin>1 && lPin<=MAX_PIN ) {
@@ -730,14 +971,40 @@ void processRequest( EthernetClient client ) {
     } else if ( strCommand.equals( F("/read") ) ) {
 //    } else if ( strCommand.equals( String( OP_READ ) ) ) {
 
+      log( F("Command: read") );
+
 //      Serial.println( F("(command is to read)") );
 
 //      strMessage = F("Read request recognized.");
       iMsgCode = MSG_OP_READ_SUCCESS;
 //      strMsgText = ""; // nothing to say
       
+    } else if ( strCommand.equals( F("/showlog") ) ) {
+
+      log( F("Command: showlog") );
+
+#if defined( DEFINE_DEVICE_MEGA )
+      iResponseMessageFormat = 3;
+      iMsgCode = MSG_OP_SHOW_LOG_SUCCESS;
+#else
+      iResponseMessageFormat = 2;
+      iMsgCode = MSG_OP_SHOW_LOG_ERR_NO_SD;
+#endif
+      
+    } else if ( strCommand.equals( F("/reboot") ) ) {
+
+      log( F("Command: reboot") );
+
+      Serial.println( F("Command: reboot") );
+
+//      strMessage = F("Read request recognized.");
+      iMsgCode = MSG_OP_REBOOT_QUEUED;
+//      strMsgText = ""; // nothing to say
+      
     } else {
 
+      log( F("Unknown command") );
+      
 //      Serial.println( F("(command is unknown)") );
       
 //      strMessage = "Unknown command: \"" + strCommand + "\".";
@@ -767,9 +1034,91 @@ void processRequest( EthernetClient client ) {
 //    client.println("Refresh: 1");  // refresh the page automatically every 5 sec
 //    client.println();
     
-    if ( bSendFullResponse ) {
+    if ( 1==iResponseMessageFormat ) {
 
-      sendHTMLHeader( client );
+      log( F("Sending brief message response") );
+      
+//      client.println( F("Content-Type: text/plain" ) );
+//      client.println( F("Connection: close" ) );  // the connection will be closed after completion of the response
+//      client.println();
+//      client.print( F("iMsgCode: " ) );
+//      client.println( String( iMsgCode ) );
+      
+//      sendHTTPHTMLHeader( client );
+//      client.print( F("<tt>iMsgCode: " ) );
+//      client.println( String( iMsgCode ) );
+//      client.print( F("</tt></html>" ) );
+
+      sendHTTPTextHeader( client );
+      client.print( F("iMsgCode: " ) );
+      client.println( String( iMsgCode ) );
+      
+    } else if ( 3==iResponseMessageFormat ) {
+
+      log( F("Sending file log contents as response") );
+      
+      sendHTTPTextHeader( client );
+
+#if defined( DEFINE_DEVICE_MEGA )
+//      File fileLogRead = SD.open( FILE_LOG, FILE_READ );
+//      if ( fileLogRead ) {
+//        while ( fileLogRead.available() ) {
+//          const char c = fileLogRead.read();
+//          client.print( c );
+//        }
+//        fileLogRead.close();
+//      }
+
+
+      File fh = SD.open( FILE_LOG );
+      if (fh) {
+       
+        long lSize = fh.size();
+        if ( lSize > FILE_LOG_VIEW_SIZE ) {
+          long lPos = lSize - FILE_LOG_VIEW_SIZE;
+          fh.seek( lPos );
+
+          boolean bScan = fh.available();
+          char c;
+          while ( bScan ) {
+            c = fh.read();
+            bScan = ( c!='\n' && fh.available() );
+          }
+        }
+        
+        byte clientBuf[64];
+        int clientCount = 0;
+ 
+        while ( fh.available() ) {
+          clientBuf[clientCount] = fh.read();
+          clientCount++;
+ 
+          if(clientCount > 63) {
+//            Serial.println("Packet");
+            client.write(clientBuf,64);
+            clientCount = 0;
+          }
+        }
+     
+        if (clientCount > 0) {
+          client.write( clientBuf, clientCount );
+        }
+
+        fh.close();
+      } else {
+//        Serial.println("file open failed");
+          client.print( F("Failed to open file.") );
+      }
+      
+#else
+      client.println( F( "No log file available." ) );
+#endif
+
+    } else /*if ( 2==iResponseMessageFormat )*/ {
+
+      log( F("Sending complete response") );
+
+      sendHTTPHTMLHeader( client );
 
 //      client.println( F("Content-Type: text/html" ) );
 //
@@ -808,26 +1157,85 @@ void processRequest( EthernetClient client ) {
       printNameValue( client, F("Send, recent failed"), String( byteFailedAttempts ) );
       printNameValue( client, F("Send, last failed message"), strLastFailedMessage );
       
-      printNameValue( client, F("Last success time"), String( lLastSendTime ) );
+//      printNameValue( client, F("Last success time"), String( lLastSendTime ) );
+      printNameValue( client, F("Last success time"), formatTimeValue( lLastSendTime ) );
   //    client.print( F( "<tr><td colspan='2'> Last success time </td><td><tt>" ) );
   //    printTimeValue( client, lLastSendTime );
   //    client.println( F( "</tt>\n</td></tr>" ) );    
   
       client.print( F( "<tr><td colspan='3' align='center'>Time (in ms)</td></tr>" ) );
       
-      printNameValue( client, F("Running time"), String( millis() ) );
+//      printNameValue( client, F("Running time"), String( millis() ) );
+      printNameValue( client, F("Running time"), formatTimeValue( millis() ) );
   //    client.print( F( "<tr><td> Running time </td><td><tt> time </tt></td><td><tt>" ) );
   //    printTimeValue( client, millis() );
   //    client.println( F( "</tt>\n</td></tr>" ) );
       
-      printNameValue( client, F("System time"), F("time"), String( getSystemTime() ) );
+//      printNameValue( client, F("System time"), F("time"), String( getSystemTime() ) );
+      printNameValue( client, F("System time"), F("time"), formatTimeValue( getSystemTime() ) );
   //    client.print( F( "<tr><td colspan='2'> System time </td><td><tt>" ) );
   //    printTimeValue( client, getSystemTime() );
   //    client.println( F( "</tt>\n</td></tr>" ) );    
           
-      printNameValue( client, F("Send interval"), F("interval"), String( iInterval ) );
-      printNameValue( client, F("Scheduled send"), String( lNextSend ) );
-  
+//      printNameValue( client, F("Send interval"), F("interval"), String( iInterval ) );
+      printNameValue( client, F("Send interval"), F("interval"), formatTimeValue( iInterval ) );
+//      printNameValue( client, F("Scheduled send"), String( lNextSend ) );
+      printNameValue( client, F("Scheduled send"), formatTimeValue( lNextSend ) );
+
+
+#if defined( DEFINE_DEVICE_MEGA )
+      printSection( client, F("Storage") );
+      
+      String strStatus;
+
+//      Sd2Card card;
+//      SdVolume volume;
+//      
+//      if ( card.init( SPI_HALF_SPEED, PIN_SD ) ) {
+//        switch (card.type()) {
+//          case SD_CARD_TYPE_SD1:
+//            strStatus = F("SD1");
+//            break;
+//          case SD_CARD_TYPE_SD2:
+//            strStatus = F("SD2");
+//            break;
+//          case SD_CARD_TYPE_SDHC:
+//            strStatus = F("SDHC");
+//            break;
+//          default:
+//            strStatus = F("Unknown");
+//        }        
+//        printNameValue( client, F("SD card type"), strStatus );
+//        
+//        if ( volume.init( card ) ) {
+//          
+//          uint32_t volsize;
+//          volsize = volume.blocksPerCluster() * volume.clusterCount() * 512;
+//          printNameValue( client, F("Volume size"), String( volsize ) + " bytes" );
+//          volsize = volsize / 1024 / 1024;
+//          printNameValue( client, F("Volume size"), String( volsize ) + " MB" );
+//          
+//        } else {
+//          printNameValue( client, F("Volume"), F("Init failed") );
+//        }
+//
+//      } else {
+//        printNameValue( client, F("SD card"), F("Init failed") );
+//      }
+
+      
+      File fileLog = SD.open( FILE_LOG );
+      if (fileLog) {
+        long lSize = fileLog.size();
+        lSize = lSize / 1024;
+        strStatus = String( lSize ) + " KB";
+        fileLog.close();
+      } else {
+          strStatus = F("File could not be opened");
+      }
+      printNameValue( client, F("Log file size"), strStatus );
+
+#endif  
       
       printSection( client, F("Request Details") );
       printNameValue( client, F("strOriginal"), strOriginal );
@@ -882,23 +1290,9 @@ void processRequest( EthernetClient client ) {
         client.println( F( "</tt></td></tr>" ) );
       }
   
-      
       client.println( F("</table></font>" ) );
     
       client.println( F("</html>" ) );
-
-    } else {
-      
-//      client.println( F("Content-Type: text/plain" ) );
-//      client.println( F("Connection: close" ) );  // the connection will be closed after completion of the response
-//      client.println();
-//      client.print( F("iMsgCode: " ) );
-//      client.println( String( iMsgCode ) );
-      
-      sendHTMLHeader( client );
-      client.print( F("<tt>iMsgCode: " ) );
-      client.println( String( iMsgCode ) );
-      client.print( F("</tt></html>" ) );
     }
     
 //  Serial.println( "Response sent completely." );
@@ -907,15 +1301,22 @@ void processRequest( EthernetClient client ) {
     
   // turn off activity LED
   digitalWrite( byteActivityLED, LOW );
+  return iMsgCode;
 }
 
 
-void sendHTMLHeader( EthernetClient client ) {
+void sendHTTPHTMLHeader( EthernetClient client ) {
   client.println( F("Content-Type: text/html" ) );
   client.println( F("Connection: close" ) );  // the connection will be closed after completion of the response
   client.println();
   client.println( F("<!DOCTYPE HTML>" ) );
   client.println( F("<html>" ) );
+}
+
+void sendHTTPTextHeader( EthernetClient client ) {
+  client.println( F("Content-Type: text/plain" ) );
+  client.println( F("Connection: close" ) );  // the connection will be closed after completion of the response
+  client.println();
 }
 
 
@@ -996,20 +1397,52 @@ boolean hasDataChanged() {
 void setup() {
   // put your setup code here, to run once:
   Serial.begin(9600);
-  
+
   pinMode( byteActivityLED, OUTPUT );
+
+#if defined( DEFINE_DEVICE_MEGA )
+  if ( !SD.begin( PIN_SD ) ) {
+    Serial.print( F( "Failed to initialize SD card." ) );
+  } else {
+    if ( !SD.exists( SD_DIRS ) ) {
+      SD.mkdir( SD_DIRS );
+    }
+  }
+//#else
+//  fileLog = 0;
+#endif  
+  
+  log( F("-----------------------------------------------------------") );
+  log( F("--> setup()") );
+
+  //TODO remove  
+  Serial.println( formatTimeValue( millis() ) );
 
   dht.begin();
 
   resolveMACAddress();
+//  Ethernet.maintain(); // do NOT use DHCP: not enough room for program
   Ethernet.begin( macPlanet, ipPlanet );
 //  Ethernet.begin( macPlanet );
+//  Ethernet.maintain(); // do NOT use DHCP: not enough room for program
   
   server.begin();
-  Serial.print( F("server is ") );
-  Serial.println( Ethernet.localIP() );
+  log( F("Device IP is ") );
+  log( formatIP( Ethernet.localIP() ) );
+//  log( String( F("Device IP is ") + formatIP( Ethernet.localIP() ) ) );
   
-  sendAtom( SEND_CODE_NODE_INIT );
+  
+  String strHostIP = readConfig( "host_ip", "" );
+  if ( strHostIP.length() > 0 ) {
+    processRequestSet( "host_ip", strHostIP, false );
+  } else if ( Serial ) {
+    ipStar = IPAddress( 127,0,0,1 );
+  } else {
+    sendAtom( SEND_CODE_NODE_INIT );
+  }
+
+
+  log( F("<-- setup()") );
 }
 
 
@@ -1018,7 +1451,6 @@ long lCounter = 0;
 
 void loop() {
   // put your main code here, to run repeatedly:
-
   lCounter = lCounter + 1;
 
   /* check for HTTP requests */
@@ -1026,9 +1458,13 @@ void loop() {
   if (client) {
 //    Serial.println( F("new client") );
     
-    processRequest( client );
+    const int iMsgCode = processRequest( client );
     delay(1);
     client.stop();
+    
+    if ( iMsgCode==MSG_OP_REBOOT_QUEUED ) {
+      reboot();
+    }
   }
   
   if ( 0==(lCounter % 1000) ) {
@@ -1056,9 +1492,15 @@ void loop() {
       scheduleSend( lTimeNow );
     }
   }
+  
+  
+  /* check for mandatory reboot */
+  if ( millis() >= MANDATORY_UPTIME_REBOOT ) {
+    reboot();
+  }
+  
+  
 
   // turn off activity LED
   digitalWrite( byteActivityLED, LOW );
 }
-
-#endif

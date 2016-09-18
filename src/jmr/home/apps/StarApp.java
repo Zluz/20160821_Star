@@ -152,14 +152,16 @@ public class StarApp {
 		final Composite compLeft = new Composite( shell, SWT.NONE );
 		final GridData gcLeft = new GridData( GridData.FILL, GridData.FILL, true, true );
 		gcLeft.horizontalSpan = 1;
-		gcLeft.heightHint = 300;
+		gcLeft.heightHint = 400;
+		gcLeft.widthHint = 100;
 		compLeft.setLayoutData( gcLeft );
 		compLeft.setLayout( new FillLayout() );
 		
 		final Composite compCenter = new Composite( shell, SWT.NONE );
 		final GridData gcCenter = new GridData( GridData.FILL, GridData.FILL, true, true );
 		gcCenter.horizontalSpan = 4;
-		gcCenter.widthHint = 200;
+		gcCenter.heightHint = 600;
+		gcCenter.widthHint = 500;
 		compCenter.setLayoutData( gcCenter );
 //		compCenter.setLayout( new FillLayout() );
 		compCenter.setLayout( new GridLayout() );

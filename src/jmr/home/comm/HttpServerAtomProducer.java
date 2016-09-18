@@ -46,6 +46,8 @@ public class HttpServerAtomProducer implements IAtomConsumer {
 			instance = new HttpServerAtomProducer();
 	
 	private HttpServer server;
+	
+	/** When the HTTP server is expected to be accepting requests */
 	private boolean bOnline;
 	
 	public final static int PORT_HOSTED = 80;
@@ -76,10 +78,19 @@ public class HttpServerAtomProducer implements IAtomConsumer {
 								|| !testServer() ) ) {
 							System.out.println( "HTTP Server must restart." );
 							bOnline = false;
-							final boolean bResult = 
-									HttpServerAtomProducer.this.doServerStart();
-							System.out.println( 
-									"HTTP Server restart result: " + bResult );
+							final Thread threadHTTPServerRestart = 
+									new Thread( "HTTP server restart" ) {
+								@Override
+								public void run() {
+									final boolean bResult = 
+											HttpServerAtomProducer.this.doServerStart();
+									System.out.println( 
+											"HTTP Server restart result: " + bResult );
+								}
+							};
+							threadHTTPServerRestart.start();
+							Thread.sleep( 5000 );
+							bOnline = true;
 						}
 
 						
@@ -165,7 +176,8 @@ public class HttpServerAtomProducer implements IAtomConsumer {
 			Log.log( EventType.SERVICE_HTTP_STARTING, null );
 
 	    	System.out.print( "Starting server..." );
-			server = HttpServer.create(new InetSocketAddress( PORT_HOSTED ), 0);
+			server = HttpServer.create( 
+						new InetSocketAddress( PORT_HOSTED ), 0 );
 		    server.createContext("/atom", new AtomHandler());
 		    server.createContext("/test", new TestHandler());
 		    server.createContext("/get", new GetHandler());
@@ -267,7 +279,13 @@ public class HttpServerAtomProducer implements IAtomConsumer {
 		//				}
 		//			}
 					
-					Relay.get().consume( atom );
+					final Thread thread = new Thread( "Consume atom from HTTP request" ) {
+						@Override
+						public void run() {
+							Relay.get().consume( atom );
+						}
+					};
+					thread.start();
 		
 					strResponse = "Atom consumed.\n" + atom.report();
 					
@@ -290,23 +308,27 @@ public class HttpServerAtomProducer implements IAtomConsumer {
 				}
 				
 				try ( final OutputStream os = exchange.getResponseBody() ) {
-					exchange.sendResponseHeaders( 200, strResponse.length() );
-//					final OutputStream os = exchange.getResponseBody();
-					os.write(strResponse.getBytes());
+					
+					exchange.sendResponseHeaders( HTTP_OK_STATUS, 
+									strResponse.getBytes().length );
+					os.write( strResponse.getBytes() );
 					os.close();
+
 				} catch ( final IOException e ) {
 //					final String strMessage = e.toString();
-					final String strMessage = e.getMessage();
-					if ( ("java.io.IOException: "
-							+ "An established connection was aborted by the "
+					String strMessage = e.getMessage();
+					if ( null==strMessage ) strMessage = e.toString();
+					if ( ( "An established connection was aborted by the "
 							+ "software in your host machine" ).equals( strMessage ) ) {
 						// ignore
-					} else if ( ( "java.io.IOException: "
-							+ "insufficient bytes written to stream" ).equals( strMessage ) ) {
+					} else if ( ( "insufficient bytes written to stream" ).equals( strMessage ) ) {
 						// ignore
 					} else if ( ( "stream is closed" ).equals( strMessage ) ) {
 						// ignore
+					} else if ( ( "java.nio.channels.AsynchronousCloseException" ).equals( strMessage ) ) {
+						// ignore
 					} else {
+						System.err.println( "Error message: " + strMessage );
 						e.printStackTrace();
 					}
 				}
@@ -317,7 +339,7 @@ public class HttpServerAtomProducer implements IAtomConsumer {
 		}
 	}
 	
-	
+	private static final int HTTP_OK_STATUS = 200;
 	
 
   static class GetHandler implements HttpHandler {
@@ -328,7 +350,7 @@ public class HttpServerAtomProducer implements IAtomConsumer {
       h.add( "Content-Type", "application/pdf" );
 
       // a PDF (you provide your own!)
-      File file = new File ("c:/temp/doc.pdf");
+      File file = new File("c:/temp/doc.pdf");
       byte [] bytearray  = new byte [(int)file.length()];
       FileInputStream fis = new FileInputStream(file);
       
@@ -348,9 +370,9 @@ public class HttpServerAtomProducer implements IAtomConsumer {
   static class TestHandler implements HttpHandler {
     public void handle( final HttpExchange t ) throws IOException {
 		final String response = "Test/Response";
-		t.sendResponseHeaders( 200, response.length() );
+		t.sendResponseHeaders( 200, response.getBytes().length );
 		final OutputStream os = t.getResponseBody();
-		os.write(response.getBytes());
+		os.write( response.getBytes() );
 		os.close();
     }
   }

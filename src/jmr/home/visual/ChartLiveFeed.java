@@ -20,8 +20,10 @@ import org.eclipse.swt.widgets.Display;
 import org.jfree.chart.ChartFactory;
 import org.jfree.chart.ChartUtilities;
 import org.jfree.chart.JFreeChart;
+import org.jfree.chart.title.LegendTitle;
 import org.jfree.data.xy.XYSeries;
 import org.jfree.data.xy.XYSeriesCollection;
+import org.jfree.ui.RectangleEdge;
 
 import jmr.home.apps.StarApp;
 import jmr.home.database.ConnectionProvider;
@@ -131,20 +133,25 @@ public class ChartLiveFeed {
 
 	      while( resultSetTH.next( ) ) {
 	    	  try {
-		    	  final float fValue = resultSetTH.getFloat( "Value" );
-		    	  if ( Float.isInfinite( fValue ) ) {
-		    		  System.err.println( "Value intended for live feed chart is infinite." );
+		    	  final Object obj = resultSetTH.getObject( "Value" );
+		    	  if ( "NA".equals( obj ) ) {
+//		    		  System.out.println( "x" );
 		    	  } else {
-			    	  final Date dateCreated = resultSetTH.getTime( "Created" );
-			    	  final String strName = resultSetTH.getString( "Name" );
-			    	  final long lTime = dateCreated.getTime();
-		
-			    	  if ( "Temp".equals( strName ) ) {
-			    		  seriesTemp.add( lTime, fValue );
-				    	  bHasData = true;
-			    	  } else if ( "Humid".equals( strName ) ) {
-			    		  seriesHumid.add( lTime, fValue );
-				    	  bHasData = true;
+			    	  final float fValue = resultSetTH.getFloat( "Value" );
+			    	  if ( Float.isInfinite( fValue ) ) {
+			    		  System.err.println( "Value intended for live feed chart is infinite." );
+			    	  } else {
+				    	  final Date dateCreated = resultSetTH.getTime( "Created" );
+				    	  final String strName = resultSetTH.getString( "Name" );
+				    	  final long lTime = dateCreated.getTime();
+			
+				    	  if ( "Temp".equals( strName ) ) {
+				    		  seriesTemp.add( lTime, fValue );
+					    	  bHasData = true;
+				    	  } else if ( "Humid".equals( strName ) ) {
+				    		  seriesHumid.add( lTime, fValue );
+					    	  bHasData = true;
+				    	  }
 			    	  }
 		    	  }
 	    	  } catch ( final SQLException e ) {
@@ -217,6 +224,9 @@ public class ChartLiveFeed {
 	  	  if ( bHasData ) {
 		      JFreeChart chart = ChartFactory.createScatterPlot( 
 		    		  "Node Send History", "Time", "Values", dataset );
+		      LegendTitle legend = chart.getLegend();
+		      legend.setPosition( RectangleEdge.BOTTOM );
+		      chart.setAntiAlias( true );
 	
 	//	      JFreeChart chart = ChartFactory.createPieChart(
 	//	         "Mobile Sales",  // chart title           
@@ -225,7 +235,7 @@ public class ChartLiveFeed {
 	//	         true,           
 	//	         false );
 	
-		      int width = 600; /* Width of the image */
+		      int width = 800; /* Width of the image */
 		      
 	//	      File file = new File( "Chart.jpeg" );
 		      

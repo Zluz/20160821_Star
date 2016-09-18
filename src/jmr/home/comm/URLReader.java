@@ -27,8 +27,8 @@ public class URLReader {
 		final URLConnection conn;
 		try {
 			conn = url.openConnection();
-			conn.setConnectTimeout( 1000 );
-			conn.setReadTimeout( 3000 );
+			conn.setConnectTimeout( 3000 );
+			conn.setReadTimeout( 4000 );
 		} catch ( final IOException e1) {
 			return null;
 		}
