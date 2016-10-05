@@ -46,4 +46,18 @@ public class Log {
 		log( type, strText, null, null, exception );
 	}
 
+	public static void log(	final String strText,
+							final Exception exception ) {
+		final EventType type;
+		final Class<? extends Exception> classException;
+		if ( null!=exception ) {
+			classException = exception.getClass();
+			type = EventType.getEventType( classException );
+		} else {
+			classException = null;
+			type = EventType.EX_GENERAL;
+		}
+		log( type, strText, null, null, classException );
+	}
+
 }

@@ -123,11 +123,18 @@ public class ChartLiveFeed {
 //	      final String strSQL = "SELECT * FROM galaxy.line where ( name like 'A%' ) AND NOT ( name like 'Atom%' )";
 //	      final String strSQL = "SELECT * FROM galaxy.line al, galaxy.atom a where al.seq_Atom = a.seq AND ( al.name like 'A1' ) AND NOT ( al.name like 'Atom%' ) AND Created > date_sub( now(), interval 2 day )";
 
-	      final String strSQLTH = "SELECT * FROM galaxy.line al, galaxy.atom a where al.seq_Atom = a.seq AND ( ( al.name like 'Temp' ) OR ( al.name like 'Humid' ) ) AND ( Created > date_sub( now(), interval 10 minute ) ) order by created desc";
+	      final String strSQLTH = 
+	    		  "SELECT * "
+    				  + "FROM galaxy.line al, galaxy.atom a "
+    				  + "WHERE al.seq_Atom = a.seq "
+    				  	+ "AND ( ( al.name like 'Temp%' ) OR ( al.name like 'Humid%' ) OR (al.name like 'Gas%' ) ) "
+    				  	+ "AND ( Created > date_sub( now(), interval 10 minute ) ) "
+    				  + "ORDER BY created desc";
 
 	      ResultSet resultSetTH = statement.executeQuery( strSQLTH );
 	      final XYSeries seriesTemp = new XYSeries( "Temperature" );
 	      final XYSeries seriesHumid = new XYSeries( "Humidity" );
+	      final XYSeries seriesGas = new XYSeries( "Flammable Gas" );
 	      
 	      boolean bHasData = false;
 
@@ -138,18 +145,25 @@ public class ChartLiveFeed {
 //		    		  System.out.println( "x" );
 		    	  } else {
 			    	  final float fValue = resultSetTH.getFloat( "Value" );
-			    	  if ( Float.isInfinite( fValue ) ) {
+//			    	  if ( Float.isInfinite( fValue ) ) {
+			    	  if ( Float.isNaN( fValue ) ) {
 			    		  System.err.println( "Value intended for live feed chart is infinite." );
 			    	  } else {
 				    	  final Date dateCreated = resultSetTH.getTime( "Created" );
 				    	  final String strName = resultSetTH.getString( "Name" );
 				    	  final long lTime = dateCreated.getTime();
-			
-				    	  if ( "Temp".equals( strName ) ) {
+
+				    	  if ( strName.startsWith( "Temp" ) ) {
+//				    	  if ( "Temp".equals( strName ) ) {
 				    		  seriesTemp.add( lTime, fValue );
 					    	  bHasData = true;
-				    	  } else if ( "Humid".equals( strName ) ) {
+//				    	  } else if ( "Humid".equals( strName ) ) {
+				    	  } else if ( strName.startsWith( "Humid" ) ) {
 				    		  seriesHumid.add( lTime, fValue );
+					    	  bHasData = true;
+//				    	  } else if ( "Gas".equals( strName ) ) {
+				    	  } else if ( strName.startsWith( "Gas" ) ) {
+				    		  seriesGas.add( lTime, fValue );
 					    	  bHasData = true;
 				    	  }
 			    	  }
@@ -163,6 +177,7 @@ public class ChartLiveFeed {
 	      XYSeriesCollection dataset = new XYSeriesCollection();
 	      dataset.addSeries( seriesTemp );
 	      dataset.addSeries( seriesHumid );
+	      dataset.addSeries( seriesGas );
 
 
 	      final boolean bAddAnalogPins = false;
@@ -193,14 +208,17 @@ public class ChartLiveFeed {
 		    	  double fValueNorm = iValueNorm + iPin;
 		    	  fValueNorm = 10*Math.random() - 5 + iValueNorm;
 		    	  
-		//    	  series[iPin].add( lTime, (float)iValue/1024 );
-		    	  series[iPin].add( lTime, fValueNorm );
-		    	  series[iPin+1].add( lTime+10000, fValueNorm + 10 );
-		//    	  series01.add(x, y);
-		//         dataset.setValue( 
-		//        		 resultSet.getString( "name" ) ,
-		//        		 Double.parseDouble( resultSet.getString( "value" )) );
-		    	  bHasData = true;
+		    	  if ( !Double.isNaN( fValueNorm ) ) {
+		    	  
+			//    	  series[iPin].add( lTime, (float)iValue/1024 );
+			    	  series[iPin].add( lTime, fValueNorm );
+			    	  series[iPin+1].add( lTime+10000, fValueNorm + 10 );
+			//    	  series01.add(x, y);
+			//         dataset.setValue( 
+			//        		 resultSet.getString( "name" ) ,
+			//        		 Double.parseDouble( resultSet.getString( "value" )) );
+			    	  bHasData = true;
+		    	  }
 		      }
 
 		      for ( int i=1; i<7; i++ ) {
@@ -212,9 +230,13 @@ public class ChartLiveFeed {
 		      for ( int i=1; i<100; i++ ) {
 		    	  long lTime = (long) (lLast - 100000*Math.random());
 		    	  double fValueA = 300*Math.random();
-		          series_A.add( lTime, fValueA );
+		    	  if ( !Double.isNaN(fValueA) ) {
+		    		  series_A.add( lTime, fValueA );
+		    	  }
 		    	  double fValueB = 300*Math.random();
-		          series_B.add( lTime, fValueB );
+		    	  if ( !Double.isNaN(fValueB) ) {
+		    		  series_B.add( lTime, fValueB );
+		    	  }
 		      }
 		      
 		      dataset.addSeries( series_A );

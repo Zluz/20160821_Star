@@ -54,7 +54,8 @@ public class Processor implements IAtomConsumer, IAtomValues {
 	public static final int ALLOWABLE_DELAY = 2000;
 	public static final int RULE_LOOP_INTERVAL = 200;
 	
-	private static final Map<String,PlanetInfo> mapPlanetInfo = new HashMap<>();
+	private static final Map<String,PlanetInfo> 
+					mapPlanetInfo = new HashMap<>();
 	
 	
 	private static class PlanetInfo {
@@ -63,6 +64,15 @@ public class Processor implements IAtomConsumer, IAtomValues {
 		
 		public int iInitAttempts;
 		public boolean bAWOL = false;
+
+		public final String strSerNo;
+		
+		public PlanetInfo( final String strSerNo ) {
+			this.strSerNo = strSerNo;
+		}
+		
+		final Map<String,String> mapAllData = new HashMap<>();
+		
 		
 		public void applyGracePeriod( int iTime ) {
 			final long lNow = System.currentTimeMillis();
@@ -73,15 +83,53 @@ public class Processor implements IAtomConsumer, IAtomValues {
 			final long lNow = System.currentTimeMillis();
 			return ( lNow<lGracePeriod );
 		}
+		
+		
+		public void applyInputs( final Atom atom ) {
+			
+			for ( Entry<String, String> entry : atom.entrySet() ) {
+				final String strName = entry.getKey();
+
+				final boolean bIgnorable = VAR_TIME.equals( strName );
+				
+				if ( !bIgnorable ) {
+					final String strValueNew = entry.getValue();
+					final String strValueOld = mapAllData.get( strName );
+					
+					if ( ( null==strValueOld ) 
+							|| ( !strValueOld.equals( strValueNew ) ) ) {
+
+						// data changed. check triggers, record.
+
+//						if ( strName.matches( "^D.$" ) ) {
+						if ( strName.matches( "D." ) ) {
+							
+							// fire digital triggers
+							
+							System.out.println( "Value changed: " 
+										+ strSerNo + "." + strName 
+										+ " was \"" + strValueOld + "\", "
+										+ "now \"" + strValueNew + "\"" );
+						}
+						
+						this.mapAllData.put( strName, strValueNew );
+					}
+				}
+			}
+		}
+		
 	}
 	
 	
 	private PlanetInfo getPlanetInfo( final String strSerNo ) {
+		if ( null==strSerNo ) return null;
+		if ( strSerNo.isEmpty() ) return null;
+		
 		final PlanetInfo piGet = mapPlanetInfo.get( strSerNo );
 		if ( null!=piGet ) {
 			return piGet;
 		} else {
-			final PlanetInfo piNew = new PlanetInfo();
+			final PlanetInfo piNew = new PlanetInfo( strSerNo );
 			mapPlanetInfo.put( strSerNo, piNew );
 			return piNew;
 		}
@@ -160,6 +208,23 @@ public class Processor implements IAtomConsumer, IAtomValues {
 	}
 
 	
+	private void sendRemoteAtomCommand(	final String strSerNo,
+										final String strName,
+										final String strCommand ) {
+		final Atom atom = new Atom( Type.INVOKE, strName, null );
+		atom.put( VAR_DEST_SERNO, strSerNo );
+		atom.put( VAR_COMMAND, strCommand );
+		Relay.get().consume( atom );
+	}
+
+	private void sendLocalAtom( final String strName,
+								final String strValue ) {
+		final Atom atom = new Atom( Type.STATUS, strName, null );
+		atom.put( strName, strValue );
+		Relay.get().consume( atom );
+	}
+
+
 	private void initializeContact( final String strSerNo ) {
 		if ( null==strSerNo ) return;
 		if ( strSerNo.isEmpty() ) return;
@@ -170,6 +235,9 @@ public class Processor implements IAtomConsumer, IAtomValues {
 //		final long lNow = System.currentTimeMillis();
 		
 		final PlanetInfo pi = getPlanetInfo( strSerNo );
+		
+		if ( null==pi ) return;
+		
 //		pi.lGracePeriod = Math.max( pi.lGracePeriod,
 //				lNow + 5000 );
 		pi.applyGracePeriod( 5000 );
@@ -195,22 +263,35 @@ public class Processor implements IAtomConsumer, IAtomValues {
 
 					if ( isPrimaryStarHere() ) {
 	
-						final Atom atomSetTime = 
-								new Atom( Type.INVOKE, "Set Time", null );
-						atomSetTime.put( VAR_DEST_SERNO, strSerNo );
 						strCommand = "/set/time=" + System.currentTimeMillis();
-						atomSetTime.put( VAR_COMMAND, strCommand );
-						Relay.get().consume( atomSetTime );
+						sendRemoteAtomCommand( strSerNo, "Set Time", strCommand );
 						
 						Thread.sleep( 1000 );
 	
-						final Atom atomSetSchedule = 
-								new Atom( Type.INVOKE, "Set Interval", null );
-						atomSetSchedule.put( VAR_DEST_SERNO, strSerNo );
 						strCommand = "/set/interval=" + REFRESH_INTERVAL;
-						atomSetSchedule.put( VAR_COMMAND, strCommand );
-						Relay.get().consume( atomSetSchedule );
+						sendRemoteAtomCommand( strSerNo, "Set Time", strCommand );
 
+						
+						// custom planet settings
+						
+						if ( "102008".equals( strSerNo ) ) {
+
+							Thread.sleep( 1000 );
+
+							strCommand = "/mode?12=1";
+							sendRemoteAtomCommand( strSerNo, "Set Pin Mode", strCommand );
+							
+						} else if ( "102009".equals( strSerNo ) ) {
+
+							Thread.sleep( 1000 );
+
+							strCommand = "/mode?12=1";
+							sendRemoteAtomCommand( strSerNo, "Set Pin Mode", strCommand );
+						}
+						
+						
+						
+						
 					} else {
 
 						final Atom atomRedirect = 
@@ -256,6 +337,27 @@ public class Processor implements IAtomConsumer, IAtomValues {
 		
 		if ( null!=iSendCode && iSendCode.intValue() == iNodeInit ) {
 			initializeContact( strSerNo );
+		}
+		
+		
+		final PlanetInfo pi = getPlanetInfo( strSerNo );
+		if ( null!=pi ) {
+			
+			pi.applyInputs( atom );
+
+			if ( "102009".equals( strSerNo ) ) {
+				// ..
+			} else if ( "102008".equals( strSerNo ) ) {
+				
+				final Integer iRawValue = atom.getAsInt( "A5" );
+				if ( null!=iRawValue ) {
+					
+					final float fAdjusted = (float)iRawValue / 4;
+					
+					sendLocalAtom( "Gas", Float.toString( fAdjusted ) );
+				}
+				
+			}
 		}
 		
 //		final String strPort = atom.get( Atom.VAR_ORIG_PORT );

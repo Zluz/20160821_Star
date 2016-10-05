@@ -15,19 +15,19 @@ public class AtomTable extends BaseTable implements ITable<Atom> {
 	@Override
 	public Long write( final Atom atom ) {
 		if ( null==atom ) return null;
-		
+
 		if ( null!=atom.getSeq() ) {
 			return atom.getSeq(); // TODO update database with values
 		}
-		
+
 		try ( final Statement stmt = ConnectionProvider.createStatement() ) {
 			if ( null!=stmt ) {
-				
+
 //				INSERT INTO table_name (column1,column2,column3,...)
 //				VALUES (value1,value2,value3,...);
-				
+
 				final String strStar = Long.toString( Star.get().getSeq() );
-				
+
 				final String strPlanet;
 				if ( null!=atom.getPlanet() 
 								&& null!=atom.getPlanet().getSeq() ) {
@@ -35,7 +35,7 @@ public class AtomTable extends BaseTable implements ITable<Atom> {
 				} else {
 					strPlanet = "null";
 				}
-				
+
 				final Date date = new Date( atom.getTime() );
 				final String strInsertAtom = 
 						"INSERT INTO galaxy.Atom ( seq_Star, seq_Planet, Created ) "
@@ -49,7 +49,7 @@ public class AtomTable extends BaseTable implements ITable<Atom> {
 					return null;
 				}
 				final long lSeqAtom = keys.getLong(1);
-				
+
 				String strInsertLines = 
 						"INSERT INTO galaxy.Line "
 								+ "( seq_Atom, Name, ValueText, Value, ValueInt ) "
