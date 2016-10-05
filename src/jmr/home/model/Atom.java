@@ -60,12 +60,23 @@ public class Atom extends HashMap<String,String> implements IAtomValues {
 		if ( !this.containsKey( key ) ) return null;
 		
 		final String strValue = this.get( key );
+		if ( null==strValue ) return null;
+		
 		try {
 			final int iValue = Integer.parseInt( strValue );
 			return iValue;
 		} catch ( final NumberFormatException e ) {
-			return null;
+//			return null;
 		}
+		try {
+			final float fValue = Float.parseFloat( strValue );
+			final int iValue = Math.round( fValue );
+			return iValue;
+		} catch ( final NumberFormatException e ) {
+//			return null;
+		}
+		
+		return null;
 	}
 	
 	public List<String> getOrderedKeys() {
