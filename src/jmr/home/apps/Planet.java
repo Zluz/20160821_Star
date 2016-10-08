@@ -1,6 +1,6 @@
 package jmr.home.apps;
 
-import jmr.home.comm.SerialConnector;
+import jmr.home.comm.serial.SerialConnector;
 
 public class Planet {
 

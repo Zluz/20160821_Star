@@ -23,10 +23,11 @@ import org.eclipse.swt.widgets.Shell;
 import org.eclipse.swt.widgets.Text;
 
 import gnu.io.CommPortIdentifier;
-import jmr.home.comm.HttpServerAtomProducer;
 import jmr.home.comm.InputStreamAtomProducer;
-import jmr.home.comm.SerialConnector;
-import jmr.home.comm.SerialConnector.ComBaud;
+import jmr.home.comm.http.HttpAtomRelay;
+import jmr.home.comm.http.HttpServerAtomProducer;
+import jmr.home.comm.serial.SerialConnector;
+import jmr.home.comm.serial.SerialConnector.ComBaud;
 import jmr.home.database.StarTable;
 import jmr.home.engine.Processor;
 import jmr.home.engine.Relay;
@@ -177,6 +178,10 @@ public class StarApp {
 		Relay.get().registerConsumer( porttree );
 		atomtree = new AtomTree( compRight );
 		Relay.get().registerConsumer( atomtree );
+//		final RMIAtomRelay rmi = new RMIAtomRelay();
+//		Relay.get().registerConsumer( rmi );
+		final HttpAtomRelay relayHTTP = new HttpAtomRelay();
+		Relay.get().registerConsumer( relayHTTP );
 		
 		new Processor( porttree, atomtree );
 		Relay.get().registerConsumer( Processor.getProcessor() );

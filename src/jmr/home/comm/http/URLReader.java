@@ -1,4 +1,4 @@
-package jmr.home.comm;
+package jmr.home.comm.http;
 
 import java.net.*;
 import java.io.*;

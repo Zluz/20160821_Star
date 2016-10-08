@@ -1,4 +1,4 @@
-package jmr.home.comm;
+package jmr.home.comm.http;
 
 // from
 // http://www.rgagnon.com/javadetails/java-have-a-simple-http-server.html

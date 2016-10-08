@@ -11,7 +11,7 @@ import org.eclipse.swt.widgets.TreeColumn;
 import org.eclipse.swt.widgets.TreeItem;
 
 import gnu.io.CommPortIdentifier;
-import jmr.home.comm.SerialConnector;
+import jmr.home.comm.serial.SerialConnector;
 import jmr.home.model.Atom;
 import jmr.home.model.IAtomConsumer;
 

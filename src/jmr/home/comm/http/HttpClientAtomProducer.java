@@ -1,4 +1,4 @@
-package jmr.home.comm;
+package jmr.home.comm.http;
 
 public class HttpClientAtomProducer {
 

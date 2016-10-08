@@ -1,4 +1,4 @@
-package jmr.home.comm;
+package jmr.home.comm.serial;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
@@ -18,6 +18,7 @@ import gnu.io.RXTXVersion;
 import gnu.io.SerialPort;
 import gnu.io.UnsupportedCommOperationException;
 import jmr.home.apps.AtomTree;
+import jmr.home.comm.InputStreamAtomProducer;
 import jmr.home.engine.Relay;
 import jmr.home.model.Atom;
 import jmr.home.model.IAtomMetadata;
