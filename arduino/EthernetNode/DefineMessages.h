@@ -1,6 +1,36 @@
 
 // #include "Arduino.h"
 
+
+/* Constants */
+
+const static char* FILE_LOG  = "ARDUINO/ARDUINO.LOG";
+static char* SD_DIRS = "ARDUINO/CONFIG/";
+//const static String COMMA          PROGMEM = ", ";
+//const static String OP_SET         PROGMEM = "/set";
+//const static String OP_SEND        PROGMEM = "/send";
+//const static String OP_MODE        PROGMEM = "/mode";
+//const static String OP_READ        PROGMEM = "/read";
+//const static String OP_WRITE       PROGMEM = "/write";
+
+//const static String FIELD_HOSTNAME PROGMEM = "hostname";
+//const static String FIELD_HOST_IP  PROGMEM = "host_ip";
+//const static String FIELD_INTERVAL PROGMEM = "interval";
+//const static String FIELD_TIME     PROGMEM = "time";
+
+//const static char VERSION[] PROGMEM = "20160906_001";
+//const static char COMMA[] PROGMEM = {", "};
+//const static char OP_SET[] PROGMEM = "/set";
+//const static char OP_READ[] PROGMEM = {"/read"};
+//const static char OP_SEND[] PROGMEM = {"/send"};
+//const static char FIELD_HOSTNAME[] PROGMEM = {"hostname"};
+//const static char FIELD_HOST_IP[] PROGMEM = {"host_ip"};
+//const static char FIELD_INTERVAL[] PROGMEM = {"interval"};
+//const static char FIELD_TIME[] PROGMEM = {"time"};
+
+
+
+
 // replace  strMessge
 //   with   iMsgCode, strMsgText
 
@@ -53,3 +83,8 @@
 #define SEND_CODE_ANALOG_CHANGE     2003
 #define SEND_CODE_TRIGGER           2004
 #define SEND_CODE_REQUESTED         2005
+#define SEND_CODE_NOT_SUPPORTED     2006
+
+
+
+

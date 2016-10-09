@@ -1,17 +1,18 @@
 /****************************************
   EthernetNode
   
-  Arduino UNO
+  Arduino Mega 2560
+Sketch uses 46,130 bytes (18%) of program storage space. Maximum is 253,952 bytes.
+Global variables use 1,658 bytes (20%) of dynamic memory, leaving 6,534 bytes for local variables. Maximum is 8,192 bytes.
+
+  Arduino UNO - OUTDATED
 Sketch uses 29,602 bytes (91%) of program storage space. Maximum is 32,256 bytes.
 Global variables use 621 bytes (30%) of dynamic memory, leaving 1,427 bytes for local variables. Maximum is 2,048 bytes.
-
-  Arduino Mega 2560
-Sketch uses 46,934 bytes (18%) of program storage space. Maximum is 253,952 bytes.
-Global variables use 1,586 bytes (19%) of dynamic memory, leaving 6,606 bytes for local variables. Maximum is 8,192 bytes.
 
  ****************************************/
 
 /* Select device. UNO program must fit in space. MEGA adds SD card support. */
+
 //#define DEFINE_DEVICE_UNO
 #define DEFINE_DEVICE_MEGA
 
@@ -23,20 +24,23 @@ Global variables use 1,586 bytes (19%) of dynamic memory, leaving 6,606 bytes fo
 #include <EEPROM.h>
 #include <avr/pgmspace.h>
 #include "Arduino.h"
-#include "DefineMessages.h"
+
+
+const static String VERSION  = "20160929_001";
+
 
 #if defined( DEFINE_DEVICE_MEGA )
 #include <SD.h>
 #endif
 
 
-//#define DEFINE_DEBUG_DISABLED // set to DEBUG to apply
-
 
 // DHT options
-#define PIN_DHT 2     // what digital pin we're connected to
+//#define PIN_DHT 2     // what digital pin we're connected to
 #define DHT_TYPE DHT11   // DHT 11
-DHT dht( PIN_DHT, DHT_TYPE );
+DHT dht02( 02, DHT_TYPE );
+DHT dht03( 03, DHT_TYPE );
+//DHT dht04( 04, DHT_TYPE );
 
 // SD card options
 #define PIN_SD 4
@@ -48,36 +52,6 @@ long FILE_LOG_VIEW_SIZE = 4096; // 4 K
 
 //const static long MANDATORY_UPTIME_REBOOT = 86400000; // milliseconds in a day
 const static long MANDATORY_UPTIME_REBOOT = 3600000; // hour, 3600s/hr
-
-
-
-/* Constants */
-
-const static String VERSION  = "20160917_001";
-const static char* FILE_LOG  = "ARDUINO/ARDUINO.LOG";
-static char* SD_DIRS = "ARDUINO/CONFIG/";
-//const static String COMMA          PROGMEM = ", ";
-//const static String OP_SET         PROGMEM = "/set";
-//const static String OP_SEND        PROGMEM = "/send";
-//const static String OP_MODE        PROGMEM = "/mode";
-//const static String OP_READ        PROGMEM = "/read";
-//const static String OP_WRITE       PROGMEM = "/write";
-
-//const static String FIELD_HOSTNAME PROGMEM = "hostname";
-//const static String FIELD_HOST_IP  PROGMEM = "host_ip";
-//const static String FIELD_INTERVAL PROGMEM = "interval";
-//const static String FIELD_TIME     PROGMEM = "time";
-
-//const static char VERSION[] PROGMEM = "20160906_001";
-//const static char COMMA[] PROGMEM = {", "};
-//const static char OP_SET[] PROGMEM = "/set";
-//const static char OP_READ[] PROGMEM = {"/read"};
-//const static char OP_SEND[] PROGMEM = {"/send"};
-//const static char FIELD_HOSTNAME[] PROGMEM = {"hostname"};
-//const static char FIELD_HOST_IP[] PROGMEM = {"host_ip"};
-//const static char FIELD_INTERVAL[] PROGMEM = {"interval"};
-//const static char FIELD_TIME[] PROGMEM = {"time"};
-
 
 
 
@@ -125,6 +99,13 @@ static char cStringBuffer[ BUFFER_SIZE ];
 
 
 
+#include "DefineMessages.h"
+#include "Logging.h"
+#include "Utilities.h"
+#include "CommEthernet.h"
+#include "CommSerial.h"
+
+
 
 /* Functions */
 
@@ -155,44 +136,13 @@ String formatTimeValue( const unsigned long lTime ) {
   String strText;
   long lBig = lTime / 1000;
   long lSmall = lTime % 1000;
-  sprintf( cStringBuffer, "%05u", lBig );
+  sprintf( cStringBuffer, "%07u", lBig );
   strText = String( cStringBuffer ) + F(".");
   sprintf( cStringBuffer, "%03u", lSmall );
   strText = strText + String( cStringBuffer );
 
   return strText;
 }
-
-void log( const String strText ) {
-#if defined( DEFINE_DEVICE_MEGA )
-  File fileLog = SD.open( FILE_LOG, FILE_WRITE );
-  if ( fileLog ) {
-    
-    // 86400000
-    // 12345678
-//    sprintf( cTimestamp, "%08u", millis() );
-
-    long lTime = millis();
-    long lBig = lTime / 1000;
-    long lSmall = lTime % 1000;
-    sprintf( cStringBuffer, "%05u", lBig );
-    fileLog.print( cStringBuffer );
-    fileLog.print( F(".") );
-    sprintf( cStringBuffer, "%03u", lSmall );
-    fileLog.print( cStringBuffer );
- 
-//    fileLog.print( cTimestamp );
-//    fileLog.print( formatTimeValue( millis() ) );
-    
-    fileLog.print( F(" ") );
-    fileLog.println( strText );
-    fileLog.close();
-  }
-#endif
-  Serial.print( F( "log> " ) );
-  Serial.println( strText );
-}
-
 
 void saveConfig( String strName,
                  String strValue ) {
@@ -285,56 +235,6 @@ String readConfig( String strName,
 }
 
 
-String pop( String& strSource,
-            String strToken ) {
-  if ( 0==strSource.length() ) return "";
-  if ( 0==strToken.length() ) return "";
-  int iPos = strSource.indexOf( strToken );
-  if ( -1==iPos ) return strSource;
-  
-  String strSub = strSource.substring( 0, iPos );
-  strSource = strSource.substring( iPos + strToken.length() );
-  return strSub;
-}
-
-
-
-void formatHexDigit( EthernetClient client,
-                     int num ) {
-  client.print( F("0x") );
-  if ( num < 11 ) {
-    client.print( F("0") );
-  }
-  String strHexValue = String( num, HEX );
-  strHexValue.toUpperCase();
-  client.print( strHexValue );
-}
-
-
-void printStarIP( EthernetClient client ) {
-  client.print( F("( ") );
-  for ( int i=0; i<4; i++ ) {
-    if ( i>0 ) {
-      client.print( F(".") );
-    }
-    client.print( String( arrStarIP[i] ) );
-  }
-  client.print( F(" )") );
-}
-
-
-String formatIP( IPAddress address ) {
-  String strResult = F("( ");
-  for ( int i=0; i<4; i++ ) {
-    if ( i>0 ) {
-      strResult = strResult + F(".");
-    }
-    strResult = strResult + String( address[i] );
-  }
-  strResult = strResult + F(" )");
-  return strResult;
-}
-
 
 
 
@@ -391,15 +291,6 @@ void resolveMACAddress() {
 }
   
 
-void printMACAddress( EthernetClient client ) {
-  client.print( F("[ ") );
-  for ( int i=0; i<6; i++ ) {
-    formatHexDigit( client, macPlanet[i] );
-    client.print( F(" ") );
-  }
-  client.print( F("]") );
-}
-
 
 String getSerialNumber() {
   for (int i=0; i<6; i++) {
@@ -415,53 +306,98 @@ String getVersion() {
 }
 
 
-void printNameValue(  EthernetClient client,
-                      const String strName,
-                      const String strValue ) {
-  client.print( F( "<tr><td colspan='2'>" ) );
-  client.print( strName );
-  client.print( F( "</td><td><tt>" ) );
-  client.print( strValue );
-  client.println( F( "</tt></td></tr>" ) );
-}
-
-void printNameValue(  EthernetClient client,
-                      const String strName,
-                      const String strKeyword,
-                      const String strValue ) {
-  client.print( F( "<tr><td>" ) );
-  client.print( strName );
-  client.print( F( "</td><td><tt>" ) );
-  client.print( strKeyword );
-  client.print( F( "</td><td><tt>" ) );
-  client.print( strValue );
-  client.println( F( "</tt></td></tr>" ) );
-}
-
-
-void printSection( EthernetClient client,
-                   const String strTitle ) {
-  client.print( F( "<tr><th colspan='3'>" ) );
-  client.print( strTitle );
-  client.print( F( "</th></tr>" ) );
-}
-
-
-int freeRam() {
-  extern int __heap_start, *__brkval; 
-  int v; 
-  return (int) &v - (__brkval == 0 ? (int) &__heap_start : (int) __brkval); 
-}
-
-
-void reboot() {
-  log( F("reboot requested") );
-  delay( 1000 );
-  asm volatile( "jmp 0" );
-}
-
 
 int sendAtom( int iSendCode ) {
+  int iResult;
+  String strMessage = buildSendMessage( iSendCode );
+//  if ( Serial ) {
+    iResult = sendAtomSerial( iSendCode, strMessage );
+//  } else {
+    iResult = sendAtomHTTP( iSendCode, strMessage );
+//  }
+  return iResult;
+}
+
+
+int sendAtomSerial( int iSendCode,
+                    String strMessage ) {
+
+//  String strMessage = buildSendMessage( iSendCode );
+  Serial.println( strMessage );
+
+  return SEND_CODE_NOT_SUPPORTED;
+}
+
+
+
+String buildSendMessage( int iSendCode ) {
+  
+  String str = "";
+  str += "/atom?";
+  str += "SendCode=";
+  str += String( iSendCode );
+  
+  str += "&SerNo=";
+  str += getSerialNumber();
+  str += "&Ver=";
+  str += getVersion();
+  str += "&Mem=";
+  str += String( freeRam() );
+  
+  for ( int iA = 0; iA < 6; iA++ ) {
+    int iValue = analogRead( iA );
+    str += "&A";
+    str += String( iA );
+    str += "=";
+    str += String( iValue );
+  }
+  for ( int iD = 2; iD < 14; iD++ ) {
+    int iValue = digitalRead( iD );
+    str += "&D";
+    str += String( iD );
+    str += "=";
+    str += String( iValue );
+  }
+
+  str += buildSendMessageDHT11( dht02, "02" );
+  str += buildSendMessageDHT11( dht03, "03" );
+//  str += buildSendMessageDHT11( dht04, "04" );
+  
+  return str;
+}
+
+String buildSendMessageDHT11( DHT dht, String strSuffix ) {
+
+  String str = "";
+  // DHT11: temperature and humidity
+
+  // Reading temperature or humidity takes about 250 milliseconds!
+  // Sensor readings may also be up to 2 seconds 'old' (its a very slow sensor)
+//  // Read temperature as Celsius (the default)
+  // Read temperature as Fahrenheit (isFahrenheit = true)
+  float fTemperature = dht.readTemperature(true);
+//  float fTemperature = dht.readTemperature();
+  float fHumidity = dht.readHumidity();
+
+  // Check if any reads failed and exit early (to try again).
+  if ( isnan(fHumidity) || isnan(fTemperature) ) {
+//    str += "&Temp=NA&Humid=NA";
+  } else {
+    str += "&Temp" + strSuffix + "=";
+    str += String( fTemperature );
+    str += "&Humid" + strSuffix + "=";
+    str += String( fHumidity );
+  }
+
+  return str;
+}
+
+
+
+
+
+int sendAtomHTTP( int iSendCode,
+                  String strMessage ) {
   log( F("--> sendAtom()") );
   
   if ( 0==arrStarIP[0] ) {
@@ -527,58 +463,10 @@ int sendAtom( int iSendCode ) {
   
   lLastSendTime = getSystemTime();
   
-  client.print( F("GET /atom?") );
+  client.print( F("GET ") );
   
-  client.print( F( "SendCode=" ) );
-  client.print( String( iSendCode ) );
-  client.print( F( "&SerNo=" ) );
-  client.print( getSerialNumber() );
-  client.print( F( "&Ver=" ) );
-  client.print( getVersion() );
-  client.print( F( "&Mem=" ) );
-  client.print( String( freeRam() ) );
-  
-  for ( int iA = 0; iA < 6; iA++ ) {
-    int iValue = analogRead( iA );
-    client.print( F( "&A" ) );
-    client.print( String( iA ) );
-    client.print( F( "=" ) );
-    client.print( String( iValue ) );
-  }
-  for ( int iD = 2; iD < 14; iD++ ) {
-    int iValue = digitalRead( iD );
-    client.print( F( "&D" ) );
-    client.print( String( iD ) );
-    client.print( F( "=" ) );
-    client.print( String( iValue ) );
-  }
-
-
-  
-  // DHT11: temperature and humidity
-
-  // Reading temperature or humidity takes about 250 milliseconds!
-  // Sensor readings may also be up to 2 seconds 'old' (its a very slow sensor)
-  float fHumidity = dht.readHumidity();
-//  // Read temperature as Celsius (the default)
-//  float fTemperature = dht.readTemperature();
-  // Read temperature as Fahrenheit (isFahrenheit = true)
-  float fTemperature = dht.readTemperature(true);
-
-  // Check if any reads failed and exit early (to try again).
-  if ( isnan(fHumidity) || isnan(fTemperature) ) {
-    client.print( F( "&Temp=NA&Humid=NA" ) );
-  } else {
-    client.print( F( "&Temp=" ) );
-    client.print( String( fTemperature ) );
-    client.print( F( "&Humid=" ) );
-    client.print( String( fHumidity ) );
-  }
-  
-  
- 
-  
-  
+//  String strMessage = buildSendMessage( iSendCode );
+  client.print( strMessage );
   
   
   
@@ -620,6 +508,9 @@ int sendAtom( int iSendCode ) {
 }
 
 
+
+
+
 int processRequestSet( String strName,
                        String strValue,
                        boolean bAllowSave ) {
@@ -640,7 +531,6 @@ int processRequestSet( String strName,
 //      Serial.println( "(command is to set)" );
 
       if ( strName.equals( F("hostname") ) ) {
-//      if ( strName.equals( FIELD_HOSTNAME ) ) {
 
         if ( bAllowSave ) {
           saveConfig( "hostname", strValue );
@@ -658,7 +548,6 @@ int processRequestSet( String strName,
         if ( bAllowSave ) {
           saveConfig( "host_ip", strValue );
         }
-//      } else if ( strName.equals( FIELD_HOST_IP ) ) {
 
 //        Serial.println( "(config value is host_ip)" );
         
@@ -706,7 +595,6 @@ int processRequestSet( String strName,
         sendAtom( SEND_CODE_NODE_INIT );
         
       } else if ( strName.equals( F("interval") ) ) {
-//      } else if ( strName.equals( FIELD_INTERVAL ) ) {
 
         if ( bAllowSave ) {
           saveConfig( "interval", strValue );
@@ -739,11 +627,24 @@ int processRequestSet( String strName,
         }
         
       } else if ( strName.equals( F("time") ) ) {
+
+log( "Setting time: strValue = " + strValue );
         
         String strTime = strValue;
+//log( "Setting time: strTime (1) = \"" + strTime + "\"" );
         strTime.trim();
+//log( "Setting time: strTime (2) = \"" + strTime + "\"" );
         long lValue = strTime.toInt();
+
+//log( "Setting time: strTime.toInt().." );
+
+        String strTest = String( lValue );
+
+//log( "Setting time: strTest = " + strTest );
+        
+//log( "Setting time: lValue = " + lValue );
         if ( lValue>0 ) {
+//log( "Setting time (lValue>0)" );
           
           const long lRunningTime = millis();
           lTime = lValue - lRunningTime;
@@ -754,6 +655,7 @@ int processRequestSet( String strName,
           scheduleSend( getSystemTime() );
           
         } else {
+log( "Setting time (invalid time?)" );
 //          strMessage = "Invalid time value: \"" + strValue + "\".";
           iMsgCode = MSG_TIME_OFFSET_INVALID_VALUE;
           strMsgText = strValue;
@@ -1305,63 +1207,6 @@ int processRequest( EthernetClient client ) {
 }
 
 
-void sendHTTPHTMLHeader( EthernetClient client ) {
-  client.println( F("Content-Type: text/html" ) );
-  client.println( F("Connection: close" ) );  // the connection will be closed after completion of the response
-  client.println();
-  client.println( F("<!DOCTYPE HTML>" ) );
-  client.println( F("<html>" ) );
-}
-
-void sendHTTPTextHeader( EthernetClient client ) {
-  client.println( F("Content-Type: text/plain" ) );
-  client.println( F("Connection: close" ) );  // the connection will be closed after completion of the response
-  client.println();
-}
-
-
-void sendDataJSONResponse( EthernetClient client ) {
-
-    // light up activity LED
-    digitalWrite( byteActivityLED, HIGH );
-
-//    Serial.println( "Sending response back to client.." );
-
-    // send a standard http response header
-    client.println( F("HTTP/1.1 200 OK" ) );
-    client.println( F("Content-Type: application/json" ) );
-    client.println( F("Connection: close" ) );  // the connection will be closed after completion of the response
-//    client.println("Refresh: 1");  // refresh the page automatically every 5 sec
-    client.println();
-
-    // output the value of each analog input pin
-    client.println( F( "{" ) );    
-    for ( int iA = 0; iA < 6; iA++ ) {
-      int iValue = analogRead( iA );
-      client.print( F( " \"A" ) );
-      client.print( String( iA ) );
-      client.print( F( "\": " ) );
-      client.print( String( iValue ) );
-      client.println( F( "," ) );
-    }
-    for ( int iD = 2; iD < 14; iD++ ) {
-      int iValue = digitalRead( iD );
-      client.print( F( " \"D" ) );
-      client.print( String( iD ) );
-      client.print( F( "\": " ) );
-      client.print( String( iValue ) );
-      client.println( F( "," ) );
-    }
-    
-    client.println( F("</table></font>" ) );
-    
-  client.println( F("</html>" ) );
-//  Serial.println( "Response sent completely." );
-
-}
-
-//void sendCompleteHTMLResponse() {}
-
 
 void scheduleSend( long lTimeReference ) {
   if ( iInterval>0 && lTimeReference>0 ) {
@@ -1396,7 +1241,8 @@ boolean hasDataChanged() {
 
 void setup() {
   // put your setup code here, to run once:
-  Serial.begin(9600);
+//  Serial.begin(9600);
+  Serial.begin(115200);
 
   pinMode( byteActivityLED, OUTPUT );
 
@@ -1418,7 +1264,9 @@ void setup() {
   //TODO remove  
   Serial.println( formatTimeValue( millis() ) );
 
-  dht.begin();
+  dht02.begin();
+  dht03.begin();
+//  dht04.begin();
 
   resolveMACAddress();
 //  Ethernet.maintain(); // do NOT use DHCP: not enough room for program
@@ -1504,3 +1352,4 @@ void loop() {
   // turn off activity LED
   digitalWrite( byteActivityLED, LOW );
 }
+
