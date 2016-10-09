@@ -345,7 +345,33 @@ public class Processor implements IAtomConsumer, IAtomValues {
 			
 			pi.applyInputs( atom );
 
+			Atom atomUI = new Atom( Type.TO_UI, "Update UI", null );
+
+
+			
+			final Integer iHumid02 = atom.getAsInt( "Humid02" );
+			if ( null!=iHumid02 ) {
+				final String strField = strSerNo + ".Humid_02";
+				final String strValue = atom.get( "Humid02" );
+				atomUI.put( strField, strValue );
+			}
+			final Integer iHumid03 = atom.getAsInt( "Humid03" );
+			if ( null!=iHumid03 ) {
+				final String strField = strSerNo + ".Humid_03";
+				final String strValue = atom.get( "Humid03" );
+				atomUI.put( strField, strValue );
+			}
+			final Integer iTemp02 = atom.getAsInt( "Temp02" );
+			if ( null!=iTemp02 ) {
+				final String strField = strSerNo + ".Temp_02";
+				final String strValue = atom.get( "Temp02" );
+				atomUI.put( strField, strValue );
+			}
+
+			
+			
 			if ( "102009".equals( strSerNo ) ) {
+				
 				// ..
 			} else if ( "102008".equals( strSerNo ) ) {
 				
@@ -355,8 +381,17 @@ public class Processor implements IAtomConsumer, IAtomValues {
 					final float fAdjusted = (float)iRawValue / 4;
 					
 					sendLocalAtom( "Gas", Float.toString( fAdjusted ) );
+					
+					if ( null!=atomUI) atomUI = new Atom( Type.TO_UI, "Update Gas on UI", null );
+					final String strField = "Flammable Gas";
+					final String strValue = Integer.toString( (int)fAdjusted );
+					atomUI.put( strField, strValue );
 				}
 				
+			}
+			
+			if ( null!=atomUI ) {
+				Relay.get().consume( atomUI );
 			}
 		}
 		

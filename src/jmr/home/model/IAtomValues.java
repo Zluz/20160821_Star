@@ -27,4 +27,6 @@ public interface IAtomValues {
 	
 	public final static String VAL_INVOKE_RESCAN_PORTS = "RESCAN_PORTS";
 	
+	public final static String VAR_UI_FIELD = "UIField";
+	public final static String VAR_UI_VALUE = "UIValue";
 }

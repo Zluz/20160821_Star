@@ -8,14 +8,10 @@ import java.io.File;
 import java.io.FileInputStream;
 import java.io.IOException;
 import java.io.OutputStream;
-import java.io.UnsupportedEncodingException;
 import java.net.InetAddress;
 import java.net.InetSocketAddress;
 import java.net.URI;
-import java.net.URLDecoder;
-import java.nio.charset.StandardCharsets;
 import java.util.HashMap;
-import java.util.LinkedHashMap;
 import java.util.Map;
 import java.util.Map.Entry;
 
@@ -127,8 +123,6 @@ public class HttpServerAtomProducer implements IAtomConsumer {
 		return instance;
 	}
 	
-	final public static String UTF8 = StandardCharsets.UTF_8.name();
-	
 	
 	// maybe also see (applies to java 6): 
 	// http://stackoverflow.com/questions/3519887/sun-java-httpserver-has-a-bug-how-to-fix-it
@@ -194,26 +188,6 @@ public class HttpServerAtomProducer implements IAtomConsumer {
 	    return false;
 	}
 	
-	private static Map<String,String> extractParameters( final URI uri ) {
-	    final Map<String, String> map = new LinkedHashMap<String, String>();
-	    final String query = uri.getQuery();
-	    if ( null!=query && !query.isEmpty() ) {
-		    final String[] pairs = query.split( "&" );
-		    for ( final String pair : pairs ) {
-		        final int idx = pair.indexOf( "=" );
-		        try {
-					final String strKey = URLDecoder.decode( pair.substring(0, idx), UTF8 );
-					final String strValue = URLDecoder.decode( pair.substring(idx + 1), UTF8 );
-					map.put( strKey, strValue );
-				} catch ( final UnsupportedEncodingException e ) {
-					// TODO Auto-generated catch block
-					e.printStackTrace();
-				}
-		    }
-	    }
-	    return map;
-	}
-	
 	private class AtomHandler implements HttpHandler {
 		@SuppressWarnings("unused")
 		@Override
@@ -252,7 +226,9 @@ public class HttpServerAtomProducer implements IAtomConsumer {
 //									HttpServerAtomProducer.class.getSimpleName();
 							
 							// add parameters to atom
-							final Map<String, String> map = extractParameters( uri );
+						    final String query = uri.getQuery();
+							final Map<String, String> map = 
+											Util.extractParameters( query );
 							for ( final Entry<String, String> entry : map.entrySet() ) {
 								final String strName = entry.getKey();
 								final String strValue = entry.getValue();

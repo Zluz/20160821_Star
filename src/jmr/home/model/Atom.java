@@ -11,7 +11,7 @@ import jmr.util.Util;
 
 public class Atom extends HashMap<String,String> implements IAtomValues {
 
-	public static enum Type { SYSTEM, STATUS, EVENT, INVOKE };
+	public static enum Type { SYSTEM, STATUS, EVENT, INVOKE, TO_UI };
 
 //	public final static int INVALID_VALUE = -1;
 	
@@ -44,6 +44,10 @@ public class Atom extends HashMap<String,String> implements IAtomValues {
 					final String strPort ) {
 		this( type, strPort );
 		this.strName = strName;
+	}
+	
+	public Type getType() {
+		return this.type;
 	}
 	
 	@Override
