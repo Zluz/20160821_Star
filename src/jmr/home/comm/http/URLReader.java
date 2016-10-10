@@ -3,6 +3,11 @@ package jmr.home.comm.http;
 import java.net.*;
 import java.io.*;
 
+/*
+ * This is copied: 
+ * 	StarApp: jmr.home.comm.http.URLReader
+ *  UI_RCP: jmr.home.comm.http.URLReader
+ */
 public class URLReader {
 	
 	final String strURL;

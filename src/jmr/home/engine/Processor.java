@@ -1,6 +1,5 @@
 package jmr.home.engine;
 
-import java.util.Calendar;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Map.Entry;
@@ -265,7 +264,7 @@ public class Processor implements IAtomConsumer, IAtomValues {
 					if ( isPrimaryStarHere() ) {
 	
 //						final long lTime = System.currentTimeMillis();
-						final long lTime = getMillisecondsPastMidnight();
+						final long lTime = Util.getMillisecondsPastMidnight();
 						strCommand = "/set/time=" + lTime;
 						sendRemoteAtomCommand( strSerNo, "Set Time", strCommand );
 						
@@ -316,23 +315,6 @@ public class Processor implements IAtomConsumer, IAtomValues {
 		threadInitPlanet.start();
 	}
 	
-
-	private long getMillisecondsPastMidnight() {
-		// http://stackoverflow.com/questions/34431120/how-can-i-get-the-time-in-seconds-since-midnight
-//		final Calendar now = Calendar.getInstance();
-		final Calendar midnight = Calendar.getInstance();
-
-		midnight.set(Calendar.HOUR_OF_DAY, 0);
-		midnight.set(Calendar.MINUTE, 0);
-		midnight.set(Calendar.SECOND, 0);
-		midnight.set(Calendar.MILLISECOND, 0);
-
-		final long lElapsed = 
-					System.currentTimeMillis() - 
-//					now.getTimeInMillis() - 
-							midnight.getTimeInMillis();
-		return lElapsed;
-	}
 	
 	@Override
 	public void consume( final Atom atom ) {
@@ -402,7 +384,7 @@ public class Processor implements IAtomConsumer, IAtomValues {
 					
 					sendLocalAtom( "Gas", Float.toString( fAdjusted ) );
 					
-					final String strField = "Flammable Gas";
+					final String strField = "Combustable Gas";
 					final String strValue = Integer.toString( (int)fAdjusted );
 					atomUI.put( strField, strValue );
 				}
